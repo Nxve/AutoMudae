@@ -13,11 +13,13 @@
 // @grant        GM_addStyle
 // @grant        GM_getValue
 // @grant        GM_setValue
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/enum.js?token=GHSAT0AAAAAABXS5FZFFJDYFMIBJKU3GSLGYXWWEKA
 // ==/UserScript==
 
 (function () {
-    /// LocalStorage Hook
+    /// Require
     const window = unsafeWindow;
+    const E = window.AUTOMUDAE_ENUM;
     const localStorage = window.localStorage;
 
     /// SOUND
@@ -92,58 +94,6 @@
         logger[method] = function () { this._print(method, ...arguments) };
     });
 
-    /// ENUM
-    const E_DISCORD_INFO = {
-        TOKEN: 'token',
-        CHANNEL_ID: 'channel_id',
-        GUILD_ID: 'guild_id',
-        SESSION_ID: 'session_id',
-        USER_ID: 'user_id',
-        USER_USERNAME: 'user_username'
-    };
-
-    const E_AUTOMUDAE_STATE = {
-        INJECT: 'inject',
-        SETUP: 'setup',
-        ERROR: 'error',
-        IDLE: 'idle',
-        RUN: 'run',
-    };
-
-    const E_MUDAE_INFO = {
-        ROLLS_MAX: 'rolls_max',
-        ROLLS_LEFT: 'rolls_left',
-        POWER: 'power',
-        CAN_RT: 'can_rt',
-        CAN_MARRY: 'can_marry',
-        CONSUMPTION: 'kakera_consumption'
-    };
-
-    const E_EMOJI = {
-        PEOPLE_HUGGING: '%F0%9F%AB%82',
-        kakeraP: 'kakeraP%3A609264156347990016',
-        kakera: 'kakera%3A469791929106956298',
-        kakeraT: 'kakeraT%3A609264180851376132',
-        kakeraG: 'kakeraG%3A609264166381027329',
-        kakeraY: 'kakeraY%3A605112931168026629',
-        kakeraO: 'kakeraO%3A605112954391887888',
-        kakeraR: 'kakeraR%3A605112980295647242',
-        kakeraW: 'kakeraW%3A608192076286263297',
-        kakeraL: 'kakeraL%3A815961697918779422',
-    };
-
-    const E_KAKERA = {
-        PURPLE: 'kakeraP',
-        BLUE: 'kakera',
-        CYAN: 'kakeraT',
-        GREEN: 'kakeraG',
-        YELLOW: 'kakeraY',
-        LIGHT: 'kakeraL',
-        ORANGE: 'kakeraO',
-        RED: 'kakeraR',
-        RAINBOW: 'kakeraW',
-    };
-
     /// Inject CSS
     const cssDecorators = `
     li[id^=chat-message].plus{
@@ -179,7 +129,7 @@
         z-index: 9999;
     }
 
-    #automudae-main-button:is(.${E_AUTOMUDAE_STATE.INJECT}, .${E_AUTOMUDAE_STATE.IDLE}, .${E_AUTOMUDAE_STATE.RUN}):hover {
+    #automudae-main-button:is(.${E.AUTOMUDAE_STATE.INJECT}, .${E.AUTOMUDAE_STATE.IDLE}, .${E.AUTOMUDAE_STATE.RUN}):hover {
         transform: scale(1.1);
         cursor: pointer;
         /* background-color: var(--button-outline-brand-background-hover); */
@@ -335,15 +285,15 @@
         background-color: white;
     }
 
-    #automudae-toggle-button.${E_AUTOMUDAE_STATE.ERROR}::after {
+    #automudae-toggle-button.${E.AUTOMUDAE_STATE.ERROR}::after {
         background-color: red;
     }
 
-    #automudae-toggle-button.${E_AUTOMUDAE_STATE.RUN}::after {
+    #automudae-toggle-button.${E.AUTOMUDAE_STATE.RUN}::after {
         background-color: lime;
     }
 
-    #automudae-toggle-button:is(.${E_AUTOMUDAE_STATE.IDLE}, .${E_AUTOMUDAE_STATE.RUN}):hover{
+    #automudae-toggle-button:is(.${E.AUTOMUDAE_STATE.IDLE}, .${E.AUTOMUDAE_STATE.RUN}):hover{
         transform: scale(1.05);
         cursor: pointer;
     }
@@ -447,7 +397,7 @@
     /// USER CONFIG
     const REPLACE_NATIVE_CONSOLE_WITH_AUTOMUDAE_LOGGER = true;
     const INTERESTED_MENTIONS = ['9', 'Dezoit', 'Vintset', 'Trinteiseis'];
-    const INTERESTED_KAKERA = [E_KAKERA.RAINBOW, E_KAKERA.RED, E_KAKERA.ORANGE, E_KAKERA.LIGHT, E_KAKERA.YELLOW, E_KAKERA.PURPLE];
+    const INTERESTED_KAKERA = [E.KAKERA.RAINBOW, E.KAKERA.RED, E.KAKERA.ORANGE, E.KAKERA.LIGHT, E.KAKERA.YELLOW, E.KAKERA.PURPLE];
 
     Object.setPrototypeOf(logger, _logger);
 
@@ -499,17 +449,17 @@
             getId: (el_Message) => el_Message.id.split('-').last(),
 
             isFromMudae: function (el_Message) { return this.getAuthorId(el_Message) === MUDAE_USER_ID },
-            isFromMe: function (el_Message) { return this.getAuthorId(el_Message) === Discord.info.get(E_DISCORD_INFO.USER_ID) },
+            isFromMe: function (el_Message) { return this.getAuthorId(el_Message) === Discord.info.get(E.DISCORD_INFO.USER_ID) },
 
             send: function (content) {
                 const now = performance.now();
 
                 if (now - this._cdSend < INTERVAL_SEND_MESSAGE) return;
 
-                fetch(`https://discord.com/api/v9/channels/${Discord.info.get(E_DISCORD_INFO.CHANNEL_ID)}/messages`, {
+                fetch(`https://discord.com/api/v9/channels/${Discord.info.get(E.DISCORD_INFO.CHANNEL_ID)}/messages`, {
                     "method": "POST",
                     "headers": {
-                        "authorization": Discord.info.get(E_DISCORD_INFO.TOKEN),
+                        "authorization": Discord.info.get(E.DISCORD_INFO.TOKEN),
                         "content-type": "application/json"
                     },
                     "body": `{"content":"${content || '?'}","nonce":"${++this._nonce}","tts":false}`
@@ -519,10 +469,10 @@
             },
 
             react: function (el_Message, E_emoji) {
-                fetch(`https://discord.com/api/v9/channels/${Discord.info.get(E_DISCORD_INFO.CHANNEL_ID)}/messages/${this.getId(el_Message)}/reactions/${E_emoji}/%40me`, {
+                fetch(`https://discord.com/api/v9/channels/${Discord.info.get(E.DISCORD_INFO.CHANNEL_ID)}/messages/${this.getId(el_Message)}/reactions/${E_emoji}/%40me`, {
                     "method": "PUT",
                     "headers": {
-                        "authorization": Discord.info.get(E_DISCORD_INFO.TOKEN),
+                        "authorization": Discord.info.get(E.DISCORD_INFO.TOKEN),
                     }
                 });
             }
@@ -534,15 +484,15 @@
     /// AutoMudae
     const AutoMudae = {
         info: new Map(),
-        state: E_AUTOMUDAE_STATE.INJECT,
+        state: E.AUTOMUDAE_STATE.INJECT,
         chatObserver: new MutationObserver(ms => ms.forEach(m => { if (m.addedNodes.length) { handleNewChatAppend(m.addedNodes) } })),
         cdGatherInfo: 0,
         cdRoll: 0,
 
-        isRunning: function () { return this.state === E_AUTOMUDAE_STATE.RUN },
+        isRunning: function () { return this.state === E.AUTOMUDAE_STATE.RUN },
         isLastReset: function () { const now = new Date(), h = now.getHours(), m = now.getMinutes(); return (h % 3 == 2 && m >= 36) || (h % 3 == 0 && m < 36) },
 
-        hasBasicInfo: function () { return [E_MUDAE_INFO.ROLLS_MAX, E_MUDAE_INFO.ROLLS_LEFT, E_MUDAE_INFO.POWER, E_MUDAE_INFO.CAN_RT, E_MUDAE_INFO.CAN_MARRY, E_MUDAE_INFO.CONSUMPTION].every(info => AutoMudae.info.has(info)) },
+        hasBasicInfo: function () { return [E.MUDAE_INFO.ROLLS_MAX, E.MUDAE_INFO.ROLLS_LEFT, E.MUDAE_INFO.POWER, E.MUDAE_INFO.CAN_RT, E.MUDAE_INFO.CAN_MARRY, E.MUDAE_INFO.CONSUMPTION].every(info => AutoMudae.info.has(info)) },
 
         mudaeTimeToMs: function (timeString) {
             if (!timeString.includes('h')) return Number(timeString) * 60 * 1000;
@@ -575,7 +525,7 @@
     window.AutoMudae = AutoMudae;
 
     AutoMudae.toggle = function () {
-        if (AutoMudae.state === E_AUTOMUDAE_STATE.IDLE) {
+        if (AutoMudae.state === E.AUTOMUDAE_STATE.IDLE) {
             let msToStartResetHandler = 1;
             const now = new Date();
 
@@ -588,7 +538,7 @@
             AutoMudae.Timers.set('think', think, INTERVAL_THINK, true);
             AutoMudae.Timers.set('initHourlyResetHandler', () => { handleHourlyReset(); AutoMudae.Timers.set('HandleHourlyReset', handleHourlyReset, 1 * 60 * 60 * 1000, true) }, msToStartResetHandler);
             AutoMudae.chatObserver.observe(DOM.el_Chat, { childList: true });
-            AutoMudae.setState(E_AUTOMUDAE_STATE.RUN);
+            AutoMudae.setState(E.AUTOMUDAE_STATE.RUN);
             logger.log("Running..");
             return;
         }
@@ -596,7 +546,7 @@
         AutoMudae.chatObserver.disconnect();
         AutoMudae.Timers.clear();
         AutoMudae.info.clear();
-        AutoMudae.setState(E_AUTOMUDAE_STATE.IDLE);
+        AutoMudae.setState(E.AUTOMUDAE_STATE.IDLE);
         logger.log("Turned off.");
     };
 
@@ -610,10 +560,10 @@
         AutoMudae.state = E_state;
 
         const stateTexts = {};
-        stateTexts[E_AUTOMUDAE_STATE.SETUP] = "Setting up...";
-        stateTexts[E_AUTOMUDAE_STATE.ERROR] = "Error!";
-        stateTexts[E_AUTOMUDAE_STATE.IDLE] = "Run Auto-Mudae";
-        stateTexts[E_AUTOMUDAE_STATE.RUN] = "Running...";
+        stateTexts[E.AUTOMUDAE_STATE.SETUP] = "Setting up...";
+        stateTexts[E.AUTOMUDAE_STATE.ERROR] = "Error!";
+        stateTexts[E.AUTOMUDAE_STATE.IDLE] = "Run Auto-Mudae";
+        stateTexts[E.AUTOMUDAE_STATE.RUN] = "Running...";
 
         DOM.el_MainText.innerText = stateTexts[E_state];
     };
@@ -650,11 +600,11 @@
             return "Couldn't retrieve active guild or channel.";
         }
 
-        Discord.info.set(E_DISCORD_INFO.TOKEN, localStorage.token.replace(/\"/g, ''));
-        Discord.info.set(E_DISCORD_INFO.CHANNEL_ID, channelId);
-        Discord.info.set(E_DISCORD_INFO.GUILD_ID, guildId);
-        Discord.info.set(E_DISCORD_INFO.USER_ID, localStorage.user_id_cache.replace(/\D/g, ''));
-        Discord.info.set(E_DISCORD_INFO.USER_USERNAME, username);
+        Discord.info.set(E.DISCORD_INFO.TOKEN, localStorage.token.replace(/\"/g, ''));
+        Discord.info.set(E.DISCORD_INFO.CHANNEL_ID, channelId);
+        Discord.info.set(E.DISCORD_INFO.GUILD_ID, guildId);
+        Discord.info.set(E.DISCORD_INFO.USER_ID, localStorage.user_id_cache.replace(/\D/g, ''));
+        Discord.info.set(E.DISCORD_INFO.USER_USERNAME, username);
     };
 
     AutoMudae.inject = function(){
@@ -674,10 +624,10 @@
     };
 
     AutoMudae.tryEnable = function () {
-        if (AutoMudae.state !== E_AUTOMUDAE_STATE.SETUP) return;
-        if (![...Object.values(E_DISCORD_INFO)].every(info => Discord.info.has(info))) return;
+        if (AutoMudae.state !== E.AUTOMUDAE_STATE.SETUP) return;
+        if (![...Object.values(E.DISCORD_INFO)].every(info => Discord.info.has(info))) return;
 
-        AutoMudae.setState(E_AUTOMUDAE_STATE.IDLE);
+        AutoMudae.setState(E.AUTOMUDAE_STATE.IDLE);
         DOM.el_MainButton.onclick = (_e) => AutoMudae.toggle();
         logger.new("Ready to go!");
 
@@ -695,7 +645,7 @@
         const el_MainButton = document.createElement('div');
         el_MainButton.id = 'automudae-main-button';
 
-        el_MainButton.classList.add(E_AUTOMUDAE_STATE.INJECT);
+        el_MainButton.classList.add(E.AUTOMUDAE_STATE.INJECT);
 
         const el_MainText = document.createElement('span');
         el_MainText.appendChild(document.createTextNode('Inject Auto-Mudae'));
@@ -825,7 +775,7 @@
         DOM.el_FieldRT = document.getElementById("automudae-field-rt");
         DOM.el_FieldConsumption = document.getElementById("automudae-field-consumption");
 
-        AutoMudae.setState(E_AUTOMUDAE_STATE.SETUP);
+        AutoMudae.setState(E.AUTOMUDAE_STATE.SETUP);
     };
 
     AutoMudae.roll = function () {
@@ -834,10 +784,10 @@
         fetch("https://discord.com/api/v9/interactions", {
             "method": "POST",
             "headers": {
-                "authorization": Discord.info.get(E_DISCORD_INFO.TOKEN),
+                "authorization": Discord.info.get(E.DISCORD_INFO.TOKEN),
                 "content-type": "multipart/form-data; boundary=----WebKitFormBoundaryVAJ0Szw02nobXJyN",
             },
-            "body": `------WebKitFormBoundaryVAJ0Szw02nobXJyN\r\nContent-Disposition: form-data; name="payload_json"\r\n\r\n{"type":2,"application_id":"${MUDAE_USER_ID}","guild_id":"${Discord.info.get(E_DISCORD_INFO.GUILD_ID)}","channel_id":"${Discord.info.get(E_DISCORD_INFO.CHANNEL_ID)}","session_id":"${Discord.info.get(E_DISCORD_INFO.SESSION_ID)}","data":{"version":"832172151729422418","id":"832172151729422417","name":"wa","type":1,"options":[],"application_command":{"id":"832172151729422417","application_id":"${MUDAE_USER_ID}","version":"832172151729422418","default_permission":true,"default_member_permissions":null,"type":1,"name":"wa","description":"Roll a random animanga waifu.","dm_permission":true},"attachments":[]},"nonce":"${++Discord.Message._nonce}"}\r\n------WebKitFormBoundaryVAJ0Szw02nobXJyN--\r\n`
+            "body": `------WebKitFormBoundaryVAJ0Szw02nobXJyN\r\nContent-Disposition: form-data; name="payload_json"\r\n\r\n{"type":2,"application_id":"${MUDAE_USER_ID}","guild_id":"${Discord.info.get(E.DISCORD_INFO.GUILD_ID)}","channel_id":"${Discord.info.get(E.DISCORD_INFO.CHANNEL_ID)}","session_id":"${Discord.info.get(E.DISCORD_INFO.SESSION_ID)}","data":{"version":"832172151729422418","id":"832172151729422417","name":"wa","type":1,"options":[],"application_command":{"id":"832172151729422417","application_id":"${MUDAE_USER_ID}","version":"832172151729422418","default_permission":true,"default_member_permissions":null,"type":1,"name":"wa","description":"Roll a random animanga waifu.","dm_permission":true},"attachments":[]},"nonce":"${++Discord.Message._nonce}"}\r\n------WebKitFormBoundaryVAJ0Szw02nobXJyN--\r\n`
         });
     };
 
@@ -847,7 +797,7 @@
 
         const cooldownRTMatch = /: (.+) min. \(\$rtu\)/.exec(mudaeResponse);
 
-        AutoMudae.info.set(E_MUDAE_INFO.CAN_RT, !cooldownRTMatch);
+        AutoMudae.info.set(E.MUDAE_INFO.CAN_RT, !cooldownRTMatch);
 
         if (cooldownRTMatch) {
             logger.log(`Scheduled a RT check. [${cooldownRTMatch[1]}]`);
@@ -896,16 +846,16 @@
                                 const rolls = Number(matchRolls[1]);
 
 
-                                const hasRollsMax = AutoMudae.info.has(E_MUDAE_INFO.ROLLS_MAX);
+                                const hasRollsMax = AutoMudae.info.has(E.MUDAE_INFO.ROLLS_MAX);
 
-                                if (!hasRollsMax || !AutoMudae.info.has(E_MUDAE_INFO.ROLLS_LEFT)) logger.info(`Got max rolls. You have ${rolls}.`);
+                                if (!hasRollsMax || !AutoMudae.info.has(E.MUDAE_INFO.ROLLS_LEFT)) logger.info(`Got max rolls. You have ${rolls}.`);
 
-                                if (!hasRollsMax || hasRollsMax && AutoMudae.info.get(E_MUDAE_INFO.ROLLS_MAX) < rolls){
-                                    AutoMudae.info.set(E_MUDAE_INFO.ROLLS_MAX, rolls);
+                                if (!hasRollsMax || hasRollsMax && AutoMudae.info.get(E.MUDAE_INFO.ROLLS_MAX) < rolls){
+                                    AutoMudae.info.set(E.MUDAE_INFO.ROLLS_MAX, rolls);
                                     DOM.el_FieldRollsMax.innerText = rolls;
                                 }
 
-                                AutoMudae.info.set(E_MUDAE_INFO.ROLLS_LEFT, rolls);
+                                AutoMudae.info.set(E.MUDAE_INFO.ROLLS_LEFT, rolls);
                                 DOM.el_FieldRollsLeft.innerText = rolls;
                             }
 
@@ -913,21 +863,21 @@
                             if (matchPower) {
                                 const power = Number(matchPower[1]);
 
-                                if (!AutoMudae.info.has(E_MUDAE_INFO.POWER)) logger.info(`Got power. You have ${power}%.`);
+                                if (!AutoMudae.info.has(E.MUDAE_INFO.POWER)) logger.info(`Got power. You have ${power}%.`);
 
-                                AutoMudae.info.set(E_MUDAE_INFO.POWER, power);
+                                AutoMudae.info.set(E.MUDAE_INFO.POWER, power);
                                 DOM.el_FieldPower.innerText = power;
                             }
 
                             if (/\$rt/.test(mudaeResponse)) {
-                                const hadRT = AutoMudae.info.has(E_MUDAE_INFO.CAN_RT);
+                                const hadRT = AutoMudae.info.has(E.MUDAE_INFO.CAN_RT);
 
                                 handleRTUResponse(mudaeResponse);
 
-                                const canRT = AutoMudae.info.get(E_MUDAE_INFO.CAN_RT);
+                                const canRT = AutoMudae.info.get(E.MUDAE_INFO.CAN_RT);
 
                                 if (!hadRT) {
-                                    logger.info(`Got RT availability. RT is ${AutoMudae.info.get(E_MUDAE_INFO.CAN_RT) ? '' : 'un'}available.`);
+                                    logger.info(`Got RT availability. RT is ${AutoMudae.info.get(E.MUDAE_INFO.CAN_RT) ? '' : 'un'}available.`);
                                 } else if (canRT) {
                                     logger.info("You can RT again.");
                                 }
@@ -938,9 +888,9 @@
                             if (/casar/.test(mudaeResponse)) {
                                 const cantMarry = /se casar novamente (.+) min/.exec(mudaeResponse);
 
-                                const hadMarry = AutoMudae.info.has(E_MUDAE_INFO.CAN_MARRY);
+                                const hadMarry = AutoMudae.info.has(E.MUDAE_INFO.CAN_MARRY);
 
-                                AutoMudae.info.set(E_MUDAE_INFO.CAN_MARRY, !cantMarry);
+                                AutoMudae.info.set(E.MUDAE_INFO.CAN_MARRY, !cantMarry);
 
                                 if (!hadMarry) {
                                     logger.info('Got marry availability.' + (cantMarry ? `You can't marry for ${cantMarry[1]}.` : ' You can marry right now.'));
@@ -955,9 +905,9 @@
                             if (matchKakeraConsumption) {
                                 const consumption = Number(matchKakeraConsumption[1]);
 
-                                if (!AutoMudae.info.has(E_MUDAE_INFO.CONSUMPTION)) logger.info(`Got kakera consumption. You consume ${consumption}% per kakera reaction.`);
+                                if (!AutoMudae.info.has(E.MUDAE_INFO.CONSUMPTION)) logger.info(`Got kakera consumption. You consume ${consumption}% per kakera reaction.`);
 
-                                AutoMudae.info.set(E_MUDAE_INFO.CONSUMPTION, consumption);
+                                AutoMudae.info.set(E.MUDAE_INFO.CONSUMPTION, consumption);
                                 DOM.el_FieldConsumption.innerText = consumption;
                             }
 
@@ -985,22 +935,22 @@
                 if (match) {
                     const [_, username, kakeraQuantity] = match;
 
-                    if (username === Discord.info.get(E_DISCORD_INFO.USER_USERNAME)) {
+                    if (username === Discord.info.get(E.DISCORD_INFO.USER_USERNAME)) {
                         const kakeraType = el_Strong.previousElementSibling?.firstElementChild?.alt.replace(':', '');
 
                         //# Detect if it has 10+keys, so the cost is halved
-                        const powerCost = kakeraType === E_KAKERA.PURPLE ? 0 : AutoMudae.info.get(E_MUDAE_INFO.CONSUMPTION);
+                        const powerCost = kakeraType === E.KAKERA.PURPLE ? 0 : AutoMudae.info.get(E.MUDAE_INFO.CONSUMPTION);
 
                         if (powerCost > 0){
-                            const newPower = AutoMudae.info.get(E_MUDAE_INFO.POWER) - powerCost;
+                            const newPower = AutoMudae.info.get(E.MUDAE_INFO.POWER) - powerCost;
 
-                            AutoMudae.info.set(E_MUDAE_INFO.POWER, newPower);
+                            AutoMudae.info.set(E.MUDAE_INFO.POWER, newPower);
                             DOM.el_FieldPower.innerText = newPower;
                         }
 
                         el_Message.classList.add('plus');
                         DOM.el_FieldKakera.innerText = Number(DOM.el_FieldKakera.innerText) + Number(kakeraQuantity);
-                        logger.new(`+${kakeraQuantity} kakera! [Remaining Power: ${AutoMudae.info.get(E_MUDAE_INFO.POWER)}%]`);
+                        logger.new(`+${kakeraQuantity} kakera! [Remaining Power: ${AutoMudae.info.get(E.MUDAE_INFO.POWER)}%]`);
                         return;
                     }
                 }
@@ -1015,8 +965,8 @@
                 if (match) {
                     const [_, username, characterName] = match;
 
-                    if (username === Discord.info.get(E_DISCORD_INFO.USER_USERNAME)) {
-                        AutoMudae.info.set(E_MUDAE_INFO.CAN_MARRY, false);
+                    if (username === Discord.info.get(E.DISCORD_INFO.USER_USERNAME)) {
+                        AutoMudae.info.set(E.MUDAE_INFO.CAN_MARRY, false);
                         DOM.el_FieldMarry.innerText = "No";
                         el_Message.classList.add('plus');
 
@@ -1047,9 +997,9 @@
                     const matchReplyUserId = /avatars\/(\d+)\//.exec(el_ReplyAvatar.src);
                     if (!matchReplyUserId) return logger.error("Couldn't get reply user ID for", el_Message);
 
-                    if (Discord.info.get(E_DISCORD_INFO.USER_ID) === matchReplyUserId[1]){
-                        const newRollsLeft = AutoMudae.info.get(E_MUDAE_INFO.ROLLS_LEFT) - 1;
-                        AutoMudae.info.set(E_MUDAE_INFO.ROLLS_LEFT, newRollsLeft);
+                    if (Discord.info.get(E.DISCORD_INFO.USER_ID) === matchReplyUserId[1]){
+                        const newRollsLeft = AutoMudae.info.get(E.MUDAE_INFO.ROLLS_LEFT) - 1;
+                        AutoMudae.info.set(E.MUDAE_INFO.ROLLS_LEFT, newRollsLeft);
                         DOM.el_FieldRollsLeft.innerText = newRollsLeft;
                     }
                 }
@@ -1068,7 +1018,7 @@
                         }
                     }
 
-                    if (!el_InterestingCharacter && AutoMudae.isLastReset() && Discord.info.get(E_DISCORD_INFO.CAN_MARRY)) {
+                    if (!el_InterestingCharacter && AutoMudae.isLastReset() && Discord.info.get(E.DISCORD_INFO.CAN_MARRY)) {
                         const characterName = el_Message.querySelector("span[class^='embedAuthorName']")?.innerText;
 
                         //# Search in a database
@@ -1083,9 +1033,9 @@
 
                         logger.info(`Found character [${characterName || '?'}]`);
 
-                        if (AutoMudae.info.get(E_MUDAE_INFO.CAN_MARRY)) {
+                        if (AutoMudae.info.get(E.MUDAE_INFO.CAN_MARRY)) {
                             //# Should somehow detect when it's able to react
-                            setTimeout(() => Discord.Message.react(el_Message, E_EMOJI.PEOPLE_HUGGING), 1000);
+                            setTimeout(() => Discord.Message.react(el_Message, E.EMOJI.PEOPLE_HUGGING), 1000);
                             return;
                         }
 
@@ -1120,10 +1070,10 @@
 
                         const kakeraCode = el_KakeraReactionImg.alt;
 
-                        const hasEnoughPower = kakeraCode === E_KAKERA.PURPLE || AutoMudae.info.get(E_MUDAE_INFO.POWER) > AutoMudae.info.get(E_MUDAE_INFO.CONSUMPTION);
+                        const hasEnoughPower = kakeraCode === E.KAKERA.PURPLE || AutoMudae.info.get(E.MUDAE_INFO.POWER) > AutoMudae.info.get(E.MUDAE_INFO.CONSUMPTION);
 
                         if (INTERESTED_KAKERA.includes(kakeraCode) && hasEnoughPower) {
-                            Discord.Message.react(el_Message, E_EMOJI[kakeraCode]);
+                            Discord.Message.react(el_Message, E.EMOJI[kakeraCode]);
                         }
                     }, 100);
                 }
@@ -1146,7 +1096,7 @@
             return;
         }
 
-        if (AutoMudae.info.get(E_MUDAE_INFO.ROLLS_LEFT) > 0 && now - Discord.lastMessageTime > (INTERVAL_ROLL * 1.5) && now - AutoMudae.cdRoll > INTERVAL_ROLL) {
+        if (AutoMudae.info.get(E.MUDAE_INFO.ROLLS_LEFT) > 0 && now - Discord.lastMessageTime > (INTERVAL_ROLL * 1.5) && now - AutoMudae.cdRoll > INTERVAL_ROLL) {
             AutoMudae.roll();
             AutoMudae.cdRoll = now;
         }
@@ -1160,7 +1110,7 @@
 
             if (match) {
                 window.console.info = console.info; // No need to track anymore
-                Discord.info.set(E_DISCORD_INFO.SESSION_ID, match[1]);
+                Discord.info.set(E.DISCORD_INFO.SESSION_ID, match[1]);
                 AutoMudae.tryEnable();
             }
         }
