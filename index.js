@@ -5,6 +5,7 @@
 // @description  Automates the use of Mudae bot in Discord
 // @author       Nxve
 // @updateURL    https://raw.githubusercontent.com/Nxve/AutoMudae/main/index.js?token=GHSAT0AAAAAABXS5FZFFJDYFMIBJKU3GSLGYXWWEKA
+// @downloadURL  https://raw.githubusercontent.com/Nxve/AutoMudae/main/index.js?token=GHSAT0AAAAAABXS5FZFFJDYFMIBJKU3GSLGYXWWEKA
 // @supportURL   https://github.com/Nxve/AutoMudae/issues
 // @match        https://discord.com/channels/*
 // @exclude      https://discord.com/channels/@me
