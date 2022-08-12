@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AutoMudae
 // @namespace    nxve
-// @version      0.3
+// @version      0.4
 // @description  Automates the use of Mudae bot in Discord
 // @author       Nxve
 // @updateURL    https://raw.githubusercontent.com/Nxve/AutoMudae/main/index.js
@@ -14,14 +14,23 @@
 // @grant        GM_addStyle
 // @grant        GM_getValue
 // @grant        GM_setValue
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/logger.js
 // @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/enum.js
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/css.js
 // ==/UserScript==
 
 (function () {
     /// Require
     const window = unsafeWindow;
-    const E = window.AUTOMUDAE_ENUM;
+    const logger = window.logger;
+    const E = window.AUTOMUDAE?.E;
+    const CSS = window.AUTOMUDAE?.CSS;
     const localStorage = window.localStorage;
+
+    if (!logger || !E || !CSS || localStorage){
+        console.error("[AUTO MUDAE][!] One or more requirement is missing. Reload the page.");
+        return;
+    }
 
     /// SOUND
     const audioCtx = new AudioContext();
@@ -67,325 +76,8 @@
     Array.prototype.pickRandom = function () { return this[this.length * Math.random() | 0] };
     Array.prototype.last = function () { return this[this.length - 1] };
 
-    /// Logger
-    const _logger = {
-        _preffix: '%c[AUTO MUDAE]',
-        _symbols: { error: '[!]', info: '[i]', log: '[*]', new: '[+]', debug: '[!]', warn: '[!]' },
-        _color: { error: 'red', info: 'cyan', log: 'white', new: 'lime', debug: 'cyan', warn: 'gold' },
-        _history: [],
-        _lastMessageHash: null,
-        _hash: s => s.split('').reduce((a, b) => (((a << 5) - a) + b.charCodeAt(0)) | 0, 0),
-        _print: function (type, ...etc) {
-            const hash = [...arguments].toString();
-            // if (hash === this._lastMessageHash) return;
-
-            console.log(`${this._preffix}%c${this._symbols[type]}`, 'background: black; color: magenta;', `background: black; color: ${this._color[type]}`, ...etc);
-
-            if (type !== 'debug') this._history.push([type, [...etc]]);
-            this._lastMessageHash = hash;
-        },
-        reprompt: function () {
-            this._history.forEach(log => this[log[0]](...log[1]));
-        }
-    };
-
-    const logger = {};
-
-    ['error', 'info', 'log', 'new', 'debug', 'warn'].forEach(method => {
-        logger[method] = function () { this._print(method, ...arguments) };
-    });
-
     /// Inject CSS
-    const cssDecorators = `
-    li[id^=chat-message].plus{
-        position: relative;
-        background-color: rgb(0 255 78 / 10%);
-    }
-
-    li[id^=chat-message].plus::after {
-        content: '+';
-        position: absolute;
-        bottom: 0;
-        width: 22px;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #22441a;
-        color: lime;
-    }
-    `;
-
-    const cssMainButton = `
-    #automudae-main-button {
-        position: absolute;
-        inset: 8px 0 auto 0;
-        width: fit-content;
-        margin-inline: auto;
-        padding: 5px;
-        background-color: var(--button-outline-brand-background-active);
-        color: var(--text-normal);
-        font-weight: 500;
-        transition: 200ms;
-        z-index: 9999;
-    }
-
-    #automudae-main-button:is(.${E.AUTOMUDAE_STATE.INJECT}, .${E.AUTOMUDAE_STATE.IDLE}, .${E.AUTOMUDAE_STATE.RUN}):hover {
-        transform: scale(1.1);
-        cursor: pointer;
-        /* background-color: var(--button-outline-brand-background-hover); */
-    }
-    `;
-
-    const cssSidePanels = `
-    [id^=automudae-panel] {
-        background-color: var(--background-primary);
-        font-weight: 500;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        transition: 500ms;
-        overflow: hidden;
-        height: fit-content;
-    }
-
-    [id^=automudae-panel] > * {
-        background-color: var(--interactive-muted);
-    }
-
-    [id^=automudae-panel] :is(h1, h2) {
-        background-color: var(--background-tertiary);
-        color: var(--text-normal);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    [id^=automudae-panel] h1 {
-        font-size: large;
-        height: 1.5rem;
-        background-color: var(--button-outline-brand-background-active);
-        cursor: pointer;
-    }
-
-    [id^=automudae-panel] h1:hover {
-        background-color: var(--button-outline-brand-background-hover) !important;
-    }
-
-    [id^=automudae-panel] h2 {
-        font-size: medium;
-        height: 1rem;
-    }
-
-    [id^=automudae-panel] textarea {
-        font-weight: 900;
-    }
-
-    [id^=automudae-panel] span {
-        font-size: small;
-        color: var(--text-normal);
-    }
-
-    [id^=automudae-panel] ul {
-        width: 100%;
-        font-size: small;
-        color: var(--text-normal);
-        max-height: 2rem;
-        overflow-x: clip;
-        overflow-y: auto;
-    }
-
-    [id^=automudae-panel] li:nth-child(odd) {
-        background-color: var(--background-primary);
-    }
-
-    .automudae-category-panel > div {
-        display: flex;
-        padding: 4px;
-        flex-wrap: wrap;
-    }
-
-    .automudae-category-panel > div > div:hover {
-        background-color: var(--button-secondary-background-hover);
-    }
-
-    .automudae-category-panel > div > div {
-        display: flex;
-        padding-inline: 3px;
-        border-radius: 5px;
-    }
-
-    #automudae-config-category-kakera > div {
-        justify-content: space-between;
-    }
-
-    #automudae-config-category-kakera > div > div {
-        flex-direction: column;
-        padding: 0;
-    }
-
-    #automudae-panel-info > .automudae-category-panel > div > div {
-        width: 100%;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-    }
-
-    .automudae-panel-info > div > div {
-        gap: 8px;
-    }
-
-    [id^=automudae-panel].collapsed {
-        height: 0;
-    }
-
-    [id^=automudae-panel].collapsed h1 {
-        position: absolute;
-        width: 100%;
-    }
-
-    #automudae-panel-info > .automudae-category-panel > div > div > div {
-        display: flex;
-        align-items: center;
-    }
-
-    #automudae-panel-info > .automudae-category-panel > div {
-        gap: 8px;
-    }
-    `;
-
-    GM_addStyle(cssDecorators + cssMainButton + cssSidePanels);
-
-    GM_addStyle(':root{--hm:0;}' || `
-    #automudae-toggle-button{
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 14px;
-        margin-inline: auto;
-        width: fit-content;
-        padding: 5px 10px 5px 10px;
-        display: inline-flex;
-        gap: 10px;
-        align-items: center;
-        font-weight: 500;
-        border-bottom: 1px solid black;
-        background-color: #d7d7d7;
-        box-shadow: 1px 1px 5px rgb(0 0 0 / 50%);
-        transition: 200ms;
-        z-index: 9999;
-    }
-
-    #automudae-toggle-button::after{
-        content: '';
-        position: absolute;
-        bottom: -3px;
-        left: 0;
-        width: 100%;
-        height: 2px;
-        background-color: white;
-    }
-
-    #automudae-toggle-button.${E.AUTOMUDAE_STATE.ERROR}::after {
-        background-color: red;
-    }
-
-    #automudae-toggle-button.${E.AUTOMUDAE_STATE.RUN}::after {
-        background-color: lime;
-    }
-
-    #automudae-toggle-button:is(.${E.AUTOMUDAE_STATE.IDLE}, .${E.AUTOMUDAE_STATE.RUN}):hover{
-        transform: scale(1.05);
-        cursor: pointer;
-    }
-
-    [id^=automudae-panel] {
-        position: absolute;
-        width: 285px;
-        padding: 5px;
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-        font-weight: 500;
-        background-color: #737672;
-        z-index: 9999;
-    }
-
-    #automudae-panel-config {
-        right: 0;
-    }
-
-    [id^=automudae-panel] :is(h1, h2) {
-        --border-color: #00ff2b;
-        background-color: #000000;
-        height: 40px;
-        display: grid;
-        justify-items: center;
-        align-items: center;
-        font-size: x-large;
-        border-top-left-radius: 10px;
-        border-top-right-radius: 10px;
-        border-bottom: 1px solid var(--border-color);
-        color: white;
-    }
-
-    #automudae-panel-info h2 {
-        --border-color: #ff8d00;
-        height: 30px;
-        font-size: large;
-    }
-
-    .automudae-inner-panel {
-        background-color: #cccdcc;
-        border-radius: 4px;
-        padding: 5px;
-    }
-
-    #resume > div, #mudae-status > div > div {
-        padding: 3px;
-        padding-inline: 10px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    #resume ul {
-        background-color: white;
-        height: fit-content;
-        max-height: 3rem;
-        overflow-y: auto;
-        overflow-x: clip;
-    }
-
-    #resume li:nth-child(even) {
-        background-color: rgb(0 0 0 / 20%);
-    }
-
-    #resume > #collected-kakera > div {
-        display: flex;
-        align-items: center;
-    }
-
-    #resume > #collected-characters {
-        flex-direction: column;
-        align-items: normal;
-        gap: 5px;
-    }
-
-    #mudae-status-inner-panel {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-    }
-
-    #mudae-status-inner-panel > div:nth-child(odd) {
-        background-color: rgb(0 0 0 / 25%);
-    }
-
-    #mudae-status-inner-panel > div:nth-child(even) {
-        background-color: rgb(255 255 255 / 40%);
-    }
-    `);
+    GM_addStyle(CSS);
 
     /// CONSTS
     const DEBUG = false;
@@ -399,8 +91,6 @@
     const REPLACE_NATIVE_CONSOLE_WITH_AUTOMUDAE_LOGGER = true;
     const INTERESTED_MENTIONS = ['9', 'Dezoit', 'Vintset', 'Trinteiseis'];
     const INTERESTED_KAKERA = [E.KAKERA.RAINBOW, E.KAKERA.RED, E.KAKERA.ORANGE, E.KAKERA.LIGHT, E.KAKERA.YELLOW, E.KAKERA.PURPLE];
-
-    Object.setPrototypeOf(logger, _logger);
 
     /// Discord Data & Utils
     const Discord = {
@@ -638,7 +328,7 @@
             window.logger = logger; // Exposing logger so it becomes accessible in devTools
 
             logger.debug("Turned off native console. Use logger instead. I recommend disabling network log, since Discord usualy prompt a lot of these.");
-            logger.reprompt();
+            logger._reprompt();
         }
     };
 

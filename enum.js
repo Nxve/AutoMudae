@@ -52,5 +52,7 @@
         RAINBOW: 'kakeraW',
     };
 
-    unsafeWindow.AUTOMUDAE_ENUM = E;
+    unsafeWindow.AUTOMUDAE ??= {};
+    unsafeWindow.AUTOMUDAE.E = E;
+    console.info("[AUTO MUDAE][i] Loaded ENUM.");
 })();
