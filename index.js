@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AutoMudae
 // @namespace    nxve
-// @version      0.2
+// @version      0.3
 // @description  Automates the use of Mudae bot in Discord
 // @author       Nxve
 // @updateURL    https://raw.githubusercontent.com/Nxve/AutoMudae/main/index.js?token=GHSAT0AAAAAABXS5FZFFJDYFMIBJKU3GSLGYXWWEKA
@@ -14,7 +14,7 @@
 // @grant        GM_addStyle
 // @grant        GM_getValue
 // @grant        GM_setValue
-// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/enum.js?token=GHSAT0AAAAAABXS5FZFFJDYFMIBJKU3GSLGYXWWEKA
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/enum.js?token=GHSAT0AAAAAABXS5FZFVMBP7374C2JYZ5FAYXWYI6Q
 // ==/UserScript==
 
 (function () {
