@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AutoMudae
 // @namespace    nxve
-// @version      0.4
+// @version      0.4.1
 // @description  Automates the use of Mudae bot in Discord
 // @author       Nxve
 // @updateURL    https://raw.githubusercontent.com/Nxve/AutoMudae/main/index.js
@@ -27,7 +27,7 @@
     const CSS = window.AUTOMUDAE?.CSS;
     const localStorage = window.localStorage;
 
-    if (!logger || !E || !CSS || localStorage){
+    if (!logger || !E || !CSS || !localStorage){
         console.error("[AUTO MUDAE][!] One or more requirement is missing. Reload the page.");
         return;
     }
