@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AutoMudae
 // @namespace    nxve
-// @version      0.4.2
+// @version      0.4.3
 // @description  Automates the use of Mudae bot in Discord
 // @author       Nxve
 // @updateURL    https://raw.githubusercontent.com/Nxve/AutoMudae/main/index.js
@@ -337,101 +337,110 @@
         el_InfoPanel.id = "automudae-panel-info";
         el_InfoPanel.innerHTML = `
         <h1>Auto-Mudae Info</h1>
-        <div class="automudae-category-panel">
-            <h2>Collected</h2>
-            <div id="automudae-info-category-resume">
-                <div>
-                    <span>Kakera:</span>
-                    <div><img class="emoji" src="https://cdn.discordapp.com/emojis/469835869059153940.webp?quality=lossless"><span id="automudae-field-kakera">0</span></div>
-                </div>
-                <div>
-                    <span>Characters:</span>
-                    <ul id="collected-characters"></ul>
-                </div>
-            </div>
-        </div>
-        <div class="automudae-category-panel">
-            <h2>Status</h2>
-            <div>
-                <div>
-                    <span>Rolls:</span>
-                    <div><span>(</span><span id="automudae-field-rolls-left">?</span><span>/</span><span id="automudae-field-rolls-max">?</span><span>)</span></div>
-                </div>
-                <div>
-                    <span>Power:</span>
-                    <div><span id="automudae-field-power">?</span><span>%</span></div>
-                </div>
-                <div>
-                    <span>Kakera Power Consumption:</span>
-                    <div><span id="automudae-field-consumption">?</span><span>%</span></div>
-                </div>
-                <div>
-                    <span>Can Marry?</span>
-                    <span id="automudae-field-marry">?</span>
-                </div>
-                <div>
-                    <span>Can RT?</span>
-                    <span id="automudae-field-rt">?</span>
+        <div>
+            <div class="automudae-category-panel">
+                <h2>Collected</h2>
+                <div id="automudae-info-category-resume">
+                    <div>
+                        <span>Kakera:</span>
+                        <div><img class="emoji" src="https://cdn.discordapp.com/emojis/469835869059153940.webp?quality=lossless"><span id="automudae-field-kakera">0</span></div>
+                    </div>
+                    <div>
+                        <span>Characters:</span>
+                        <ul id="collected-characters"></ul>
+                    </div>
                 </div>
             </div>
-        </div>`;
-
-        const el_ConfigPanel = document.createElement("div");
-        el_ConfigPanel.id = "automudae-panel-config";
-        el_ConfigPanel.innerHTML = `
-        <h1>Auto-Mudae Config</h1>
-        <div class="automudae-category-panel" id="automudae-config-category-kakera">
-            <h2>Kakera to Collect</h2>
-            <div>
-                <div><input type="checkbox" id="opt_kakera_p"><label for="opt_kakera_p"><img class="emoji" src="https://cdn.discordapp.com/emojis/609264156347990016.webp?quality=lossless"></label></div>
-                <div><input type="checkbox" id="opt_kakera_default"><label for="opt_kakera_default"><img class="emoji" src="https://cdn.discordapp.com/emojis/469835869059153940.webp?quality=lossless"></label></div>
-                <div><input type="checkbox" id="opt_kakera_t"><label for="opt_kakera_t"><img class="emoji" src="https://cdn.discordapp.com/emojis/609264180851376132.webp?quality=lossless"></label></div>
-                <div><input type="checkbox" id="opt_kakera_g"><label for="opt_kakera_g"><img class="emoji" src="https://cdn.discordapp.com/emojis/609264166381027329.webp?quality=lossless"></label></div>
-                <div><input type="checkbox" id="opt_kakera_y"><label for="opt_kakera_y"><img class="emoji" src="https://cdn.discordapp.com/emojis/605112931168026629.webp?quality=lossless"></label></div>
-                <div><input type="checkbox" id="opt_kakera_o"><label for="opt_kakera_o"><img class="emoji" src="https://cdn.discordapp.com/emojis/605112954391887888.webp?quality=lossless"></label></div>
-                <div><input type="checkbox" id="opt_kakera_r"><label for="opt_kakera_r"><img class="emoji" src="https://cdn.discordapp.com/emojis/605112980295647242.webp?quality=lossless"></label></div>
-                <div><input type="checkbox" id="opt_kakera_w"><label for="opt_kakera_w"><img class="emoji" src="https://cdn.discordapp.com/emojis/608192076286263297.webp?quality=lossless"></label></div>
-                <div><input type="checkbox" id="opt_kakera_l"><label for="opt_kakera_l"><img class="emoji" src="https://cdn.discordapp.com/emojis/815961697918779422.webp?quality=lossless"></label></div>
-            </div>
-        </div>
-        <div class="automudae-category-panel">
-            <h2>Interesting Mentions</h2>
-            <div>
-                <textarea spellcheck="false"></textarea>
-            </div>
-        </div>
-        <div class="automudae-category-panel">
-            <h2>Roll Type</h2>
-            <div>
+            <div class="automudae-category-panel">
+                <h2>Status</h2>
                 <div>
-                    <select><option>hx</option><option>ha</option><option>hg</option><option>wx</option><option>wa</option><option>wg</option></select></div><div>
-                    <input type="checkbox" id="opt_roll_slash"><label for="opt_roll_slash"><span>Use slash command</span></label>
-                </div>
-            </div>
-        </div>
-        <div class="automudae-category-panel">
-            <h2>Sound</h2>
-            <div>
-                <div>
-                    <input type="checkbox" id="opt_sound_marry"><label for="opt_sound_marry"><span>When marry</span></label>
-                </div>
-                <div>
-                    <input type="checkbox" id="opt_sound_cantmarry"><label for="opt_sound_cantmarry"><span>When can't marry</span></label>
-                </div>
-            </div>
-        </div>
-        <div class="automudae-category-panel">
-            <h2>Extra</h2>
-            <div>
-                <div>
-                    <input type="checkbox" id="opt_extra_logger"><label for="opt_extra_logger"><span>Replace Console with Logger</span></label>
+                    <div>
+                        <span>Rolls:</span>
+                        <div><span>(</span><span id="automudae-field-rolls-left">?</span><span>/</span><span id="automudae-field-rolls-max">?</span><span>)</span></div>
+                    </div>
+                    <div>
+                        <span>Power:</span>
+                        <div><span id="automudae-field-power">?</span><span>%</span></div>
+                    </div>
+                    <div>
+                        <span>Kakera Power Consumption:</span>
+                        <div><span id="automudae-field-consumption">?</span><span>%</span></div>
+                    </div>
+                    <div>
+                        <span>Can Marry?</span>
+                        <span id="automudae-field-marry">?</span>
+                    </div>
+                    <div>
+                        <span>Can RT?</span>
+                        <span id="automudae-field-rt">?</span>
+                    </div>
                 </div>
             </div>
         </div>
         `;
 
+        const el_ConfigPanel = document.createElement("div");
+        el_ConfigPanel.id = "automudae-panel-config";
+        el_ConfigPanel.innerHTML = `
+        <h1>Auto-Mudae Config</h1>
+        <div>
+            <div class="automudae-category-panel" id="automudae-config-category-kakera">
+                <h2>Kakera to Collect</h2>
+                <div>
+                    <div><input type="checkbox" id="opt_kakera_p"><label for="opt_kakera_p"><img class="emoji" src="https://cdn.discordapp.com/emojis/609264156347990016.webp?quality=lossless"></label></div>
+                    <div><input type="checkbox" id="opt_kakera_default"><label for="opt_kakera_default"><img class="emoji" src="https://cdn.discordapp.com/emojis/469835869059153940.webp?quality=lossless"></label></div>
+                    <div><input type="checkbox" id="opt_kakera_t"><label for="opt_kakera_t"><img class="emoji" src="https://cdn.discordapp.com/emojis/609264180851376132.webp?quality=lossless"></label></div>
+                    <div><input type="checkbox" id="opt_kakera_g"><label for="opt_kakera_g"><img class="emoji" src="https://cdn.discordapp.com/emojis/609264166381027329.webp?quality=lossless"></label></div>
+                    <div><input type="checkbox" id="opt_kakera_y"><label for="opt_kakera_y"><img class="emoji" src="https://cdn.discordapp.com/emojis/605112931168026629.webp?quality=lossless"></label></div>
+                    <div><input type="checkbox" id="opt_kakera_o"><label for="opt_kakera_o"><img class="emoji" src="https://cdn.discordapp.com/emojis/605112954391887888.webp?quality=lossless"></label></div>
+                    <div><input type="checkbox" id="opt_kakera_r"><label for="opt_kakera_r"><img class="emoji" src="https://cdn.discordapp.com/emojis/605112980295647242.webp?quality=lossless"></label></div>
+                    <div><input type="checkbox" id="opt_kakera_w"><label for="opt_kakera_w"><img class="emoji" src="https://cdn.discordapp.com/emojis/608192076286263297.webp?quality=lossless"></label></div>
+                    <div><input type="checkbox" id="opt_kakera_l"><label for="opt_kakera_l"><img class="emoji" src="https://cdn.discordapp.com/emojis/815961697918779422.webp?quality=lossless"></label></div>
+                </div>
+            </div>
+            <div class="automudae-category-panel">
+                <h2>Interesting Mentions</h2>
+                <div>
+                    <textarea spellcheck="false"></textarea>
+                </div>
+            </div>
+            <div class="automudae-category-panel">
+                <h2>Roll Type</h2>
+                <div>
+                    <div>
+                        <select><option>hx</option><option>ha</option><option>hg</option><option>wx</option><option>wa</option><option>wg</option></select></div><div>
+                        <input type="checkbox" id="opt_roll_slash"><label for="opt_roll_slash"><span>Use slash command</span></label>
+                    </div>
+                </div>
+            </div>
+            <div class="automudae-category-panel">
+                <h2>Sound</h2>
+                <div>
+                    <div>
+                        <input type="checkbox" id="opt_sound_marry"><label for="opt_sound_marry"><span>When marry</span></label>
+                    </div>
+                    <div>
+                        <input type="checkbox" id="opt_sound_cantmarry"><label for="opt_sound_cantmarry"><span>When can't marry</span></label>
+                    </div>
+                </div>
+            </div>
+            <div class="automudae-category-panel">
+                <h2>Extra</h2>
+                <div>
+                    <div>
+                        <input type="checkbox" id="opt_extra_logger"><label for="opt_extra_logger"><span>Replace Console with Logger</span></label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+
+        function collapse(){ this.parentElement.classList.toggle("collapsed") };
+
         DOM.el_ChannelList.prepend(el_InfoPanel);
         DOM.el_MemberList.prepend(el_ConfigPanel);
+
+        document.querySelectorAll("[id^='automudae-panel'] > h1").forEach(el_Header => el_Header.onclick = collapse);
 
         DOM.el_FieldKakera = document.getElementById("automudae-field-kakera");
         DOM.el_FieldCharactersList = document.getElementById("collected-characters");
