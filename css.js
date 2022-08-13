@@ -91,6 +91,7 @@
 
     [id^=automudae-panel] textarea {
         font-weight: 900;
+        max-height: 100px;
     }
 
     [id^=automudae-panel] span {
