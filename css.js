@@ -147,15 +147,6 @@
         gap: 8px;
     }
 
-    [id^=automudae-panel].collapsed {
-        height: 0;
-    }
-
-    [id^=automudae-panel].collapsed h1 {
-        position: absolute;
-        width: 100%;
-    }
-
     #automudae-panel-info > .automudae-category-panel > div > div > div {
         display: flex;
         align-items: center;

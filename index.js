@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AutoMudae
 // @namespace    nxve
-// @version      0.4.1
+// @version      0.4.2
 // @description  Automates the use of Mudae bot in Discord
 // @author       Nxve
 // @updateURL    https://raw.githubusercontent.com/Nxve/AutoMudae/main/index.js
@@ -17,6 +17,7 @@
 // @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/logger.js
 // @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/enum.js
 // @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/css.js
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/sound.js
 // ==/UserScript==
 
 (function () {
@@ -25,37 +26,21 @@
     const logger = window.logger;
     const E = window.AUTOMUDAE?.E;
     const CSS = window.AUTOMUDAE?.CSS;
+    const SOUND = window.AUTOMUDAE?.SOUND;
     const localStorage = window.localStorage;
 
-    if (!logger || !E || !CSS || !localStorage){
+    if (!logger || !E || !CSS || !SOUND || !localStorage){
         console.error("[AUTO MUDAE][!] One or more requirement is missing. Reload the page.");
         return;
     }
 
-    /// SOUND
-    const audioCtx = new AudioContext();
+    GM_addStyle(CSS);
 
-    function beep(gain, hz, ms, times = 1){
-        for (let i = 0; i < times; i++) {
-            const v = audioCtx.createOscillator();
-            const u = audioCtx.createGain();
-            v.connect(u);
-            v.frequency.value = hz;
-            v.type = "square";
-            u.connect(audioCtx.destination);
-            u.gain.value = gain * 0.01;
-            const durationInSeconds = ms * .001;
-            v.start(audioCtx.currentTime + i * (durationInSeconds*1.5));
-            v.stop(audioCtx.currentTime + durationInSeconds + i * (durationInSeconds*1.5));
-        }
-    };
+    /// Forbidden Act, don't do this at home
+    Array.prototype.pickRandom = function () { return this[this.length * Math.random() | 0] };
+    Array.prototype.last = function () { return this[this.length - 1] };
 
-    const SOUND = {
-        marry: () => {beep(10, 400, 100, 1)},
-        cantMarry: () => {beep(15, 70, 80, 6)}
-    };
-
-    /// DOM
+    /// DOM Elements
     const DOM = {
         el_ChannelList: null,
         el_MemberList: null,
@@ -72,18 +57,11 @@
         el_FieldConsumption: null
     };
 
-    /// Forbidden Act, don't do this at home
-    Array.prototype.pickRandom = function () { return this[this.length * Math.random() | 0] };
-    Array.prototype.last = function () { return this[this.length - 1] };
-
-    /// Inject CSS
-    GM_addStyle(CSS);
-
     /// CONSTS
     const DEBUG = false;
+    const LOOKUP_MESSAGE_COUNT = 100;
     const INTERVAL_SEND_MESSAGE = 1500;
     const INTERVAL_ROLL = 2000;
-    const LOOKUP_MESSAGE_COUNT = 100;
     const INTERVAL_THINK = 200;
     const MUDAE_USER_ID = '432610292342587392';
 
@@ -171,7 +149,6 @@
 
     };
 
-    window.Discord = Discord;
     /// AutoMudae
     const AutoMudae = {
         info: new Map(),
@@ -213,6 +190,9 @@
             clear: function () { [...this._t.values()].forEach(t => { clearTimeout(t); clearInterval(t) }); this._t.clear(); }
         }
     };
+
+    //# Remove this exposure
+    window.Discord = Discord;
     window.AutoMudae = AutoMudae;
 
     AutoMudae.toggle = function () {
@@ -353,10 +333,9 @@
 
     AutoMudae.render = function () {
         logger.info("Rendering...");
-        const el_AutoMudaeInfoPanel = document.createElement("div");
-        el_AutoMudaeInfoPanel.id = "automudae-panel-info";
-
-        el_AutoMudaeInfoPanel.innerHTML = `
+        const el_InfoPanel = document.createElement("div");
+        el_InfoPanel.id = "automudae-panel-info";
+        el_InfoPanel.innerHTML = `
         <h1>Auto-Mudae Info</h1>
         <div class="automudae-category-panel">
             <h2>Collected</h2>
@@ -397,9 +376,9 @@
             </div>
         </div>`;
 
-        const el_AutoMudaeConfigPanel = document.createElement("div");
-        el_AutoMudaeConfigPanel.id = "automudae-panel-config";
-        el_AutoMudaeConfigPanel.innerHTML = `
+        const el_ConfigPanel = document.createElement("div");
+        el_ConfigPanel.id = "automudae-panel-config";
+        el_ConfigPanel.innerHTML = `
         <h1>Auto-Mudae Config</h1>
         <div class="automudae-category-panel" id="automudae-config-category-kakera">
             <h2>Kakera to Collect</h2>
@@ -451,11 +430,8 @@
         </div>
         `;
 
-        //# config dom
-            //# Make collapsable
-
-        DOM.el_ChannelList.prepend(el_AutoMudaeInfoPanel);
-        DOM.el_MemberList.prepend(el_AutoMudaeConfigPanel);
+        DOM.el_ChannelList.prepend(el_InfoPanel);
+        DOM.el_MemberList.prepend(el_ConfigPanel);
 
         DOM.el_FieldKakera = document.getElementById("automudae-field-kakera");
         DOM.el_FieldCharactersList = document.getElementById("collected-characters");
