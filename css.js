@@ -179,7 +179,7 @@
 
     [id^=automudae-panel] > div {
         max-height: 600px;
-        transition: max-height 400ms linear;
+        transition: max-height 400ms cubic-bezier(0, 1, 1, 1);
     }
 
     [id^=automudae-panel].collapsed {
