@@ -156,6 +156,11 @@
         justify-content: space-between;
         gap: 10px;
     }
+
+    .automudae-row > div {
+        display: flex;
+        align-items: center;
+    }
     
     .automudae-row-expandable {
         padding: 3px;
@@ -163,6 +168,7 @@
     }
 
     .automudae-row-expandable > div:not(:first-child) {
+        margin-top: 2px;
         background-color: var(--background-primary);
         max-height: 0px;
         overflow: hidden;
@@ -188,6 +194,28 @@
     
     [id^=automudae-panel].collapsed > div {
         max-height: 0px;
+    }
+
+    [data-requirerestart] {
+        position: relative;
+    }
+    
+    [data-requirerestart]::before {
+        content: '*';
+        color: yellow;
+        position: absolute;
+        left: 0px;
+    }
+    
+    [data-requirerestart]:hover::before {
+        content: '* Require restart to work!';
+        position: absolute;
+        bottom: 20px;
+        background-color: var(--background-tertiary);
+        font-size: x-small;
+        padding: 2px 10px;
+        color: yellow;
+        border-radius: 5px;
     }
     `;
 
