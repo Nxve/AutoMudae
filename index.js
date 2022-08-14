@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AutoMudae_Multi
 // @namespace    nxve
-// @version      0.5.0
+// @version      0.5.1
 // @description  Automates the use of Mudae bot in Discord
 // @author       Nxve
 // @updateURL    https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/index.js
@@ -341,36 +341,36 @@
             <div class="automudae-section">
                 <h2>Collected</h2>
                 <div class="automudae-section-body">
-                    <div>
+                    <div class="automudae-row">
                         <span>Kakera:</span>
                         <div><img class="emoji" src="https://cdn.discordapp.com/emojis/469835869059153940.webp?quality=lossless"><span id="automudae-field-kakera">0</span></div>
                     </div>
-                    <div>
+                    <div class="automudae-row">
                         <span>Characters:</span>
                         <ul id="collected-characters"></ul>
                     </div>
                 </div>
             </div>
-            <div class="automudae-section">
+            <div class="automudae-section" id="automudae-section-status">
                 <h2>Status</h2>
                 <div class="automudae-section-body">
-                    <div>
+                    <div class="automudae-row">
                         <span>Rolls:</span>
                         <div><span>(</span><span id="automudae-field-rolls-left">?</span><span>/</span><span id="automudae-field-rolls-max">?</span><span>)</span></div>
                     </div>
-                    <div>
+                    <div class="automudae-row">
                         <span>Power:</span>
                         <div><span id="automudae-field-power">?</span><span>%</span></div>
                     </div>
-                    <div>
+                    <div class="automudae-row">
                         <span>Kakera Power Consumption:</span>
                         <div><span id="automudae-field-consumption">?</span><span>%</span></div>
                     </div>
-                    <div>
+                    <div class="automudae-row">
                         <span>Can Marry?</span>
                         <span id="automudae-field-marry">?</span>
                     </div>
-                    <div>
+                    <div class="automudae-row">
                         <span>Can RT?</span>
                         <span id="automudae-field-rt">?</span>
                     </div>

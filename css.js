@@ -132,6 +132,11 @@
         background-color: var(--button-secondary-background-hover);
     }
 
+    #automudae-panel-info .automudae-section-body {
+        flex-direction: column;
+        gap: 8px;
+    }
+
     #automudae-section-kakera > div {
         justify-content: space-between;
     }
@@ -141,20 +146,20 @@
         padding: 0;
     }
 
-    #automudae-panel-info .automudae-section-body {
-        flex-direction: column;
-        gap: 8px;
+    #automudae-section-status .automudae-section-body {
+        padding: 0;
+        gap: 0;
+    }
+    
+    #automudae-section-status .automudae-section-body > div {
+        padding: 3px;
     }
 
-    #automudae-panel-info .automudae-section-body > div {
+    .automudae-row {
+        display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 10px;
-    }
-
-    #automudae-panel-info .automudae-section-body > div > div {
-        display: flex;
-        align-items: center;
     }
 
     [id^=automudae-panel] > div {
