@@ -151,8 +151,9 @@
         gap: 0;
     }
     
-    #automudae-section-status .automudae-section-body > div {
+    .automudae-row-expandable {
         padding: 3px;
+        display: block;
     }
 
     .automudae-row {
