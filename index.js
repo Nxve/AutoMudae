@@ -267,8 +267,6 @@
             return "Couldn't retrieve active guild.";
         }
 
-        kakeraCode
-
         if (!guildId || !channelId) {
             return "Couldn't retrieve active guild or channel.";
         }
@@ -340,9 +338,9 @@
         el_InfoPanel.innerHTML = `
         <h1>Auto-Mudae Info</h1>
         <div>
-            <div class="automudae-category">
+            <div class="automudae-section">
                 <h2>Collected</h2>
-                <div id="automudae-info-category-resume">
+                <div class="automudae-section-body">
                     <div>
                         <span>Kakera:</span>
                         <div><img class="emoji" src="https://cdn.discordapp.com/emojis/469835869059153940.webp?quality=lossless"><span id="automudae-field-kakera">0</span></div>
@@ -353,9 +351,9 @@
                     </div>
                 </div>
             </div>
-            <div class="automudae-category">
+            <div class="automudae-section">
                 <h2>Status</h2>
-                <div>
+                <div class="automudae-section-body">
                     <div>
                         <span>Rolls:</span>
                         <div><span>(</span><span id="automudae-field-rolls-left">?</span><span>/</span><span id="automudae-field-rolls-max">?</span><span>)</span></div>
@@ -386,9 +384,9 @@
         el_ConfigPanel.innerHTML = `
         <h1>Auto-Mudae Config</h1>
         <div>
-            <div class="automudae-category" id="automudae-category-kakera">
+            <div class="automudae-section" id="automudae-section-kakera">
                 <h2>Kakera to Collect</h2>
-                <div>
+                <div class="automudae-section-body">
                     <div><input type="checkbox" id="opt_kakera_p"><label for="opt_kakera_p"><img class="emoji" src="https://cdn.discordapp.com/emojis/609264156347990016.webp?quality=lossless"></label></div>
                     <div><input type="checkbox" id="opt_kakera_default"><label for="opt_kakera_default"><img class="emoji" src="https://cdn.discordapp.com/emojis/469835869059153940.webp?quality=lossless"></label></div>
                     <div><input type="checkbox" id="opt_kakera_t"><label for="opt_kakera_t"><img class="emoji" src="https://cdn.discordapp.com/emojis/609264180851376132.webp?quality=lossless"></label></div>
@@ -400,24 +398,24 @@
                     <div><input type="checkbox" id="opt_kakera_l"><label for="opt_kakera_l"><img class="emoji" src="https://cdn.discordapp.com/emojis/815961697918779422.webp?quality=lossless"></label></div>
                 </div>
             </div>
-            <div class="automudae-category">
+            <div class="automudae-section">
                 <h2>Interesting Mentions</h2>
-                <div>
+                <div class="automudae-section-body">
                     <textarea spellcheck="false"></textarea>
                 </div>
             </div>
-            <div class="automudae-category">
+            <div class="automudae-section">
                 <h2>Roll Type</h2>
-                <div>
+                <div class="automudae-section-body">
                     <div>
                         <select><option>hx</option><option>ha</option><option>hg</option><option>wx</option><option>wa</option><option>wg</option></select></div><div>
                         <input type="checkbox" id="opt_roll_slash"><label for="opt_roll_slash"><span>Use slash command</span></label>
                     </div>
                 </div>
             </div>
-            <div class="automudae-category">
+            <div class="automudae-section">
                 <h2>Sound</h2>
-                <div>
+                <div class="automudae-section-body">
                     <div>
                         <input type="checkbox" id="opt_sound_marry"><label for="opt_sound_marry"><span>When marry</span></label>
                     </div>
@@ -426,9 +424,9 @@
                     </div>
                 </div>
             </div>
-            <div class="automudae-category">
+            <div class="automudae-section">
                 <h2>Extra</h2>
-                <div>
+                <div class="automudae-section-body">
                     <div>
                         <input type="checkbox" id="opt_extra_logger"><label for="opt_extra_logger"><span>Replace Console with Logger</span></label>
                     </div>
