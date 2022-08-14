@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AutoMudae_Multi
 // @namespace    nxve
-// @version      0.5.1
+// @version      0.5.2
 // @description  Automates the use of Mudae bot in Discord
 // @author       Nxve
 // @updateURL    https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/index.js
@@ -354,9 +354,29 @@
             <div class="automudae-section" id="automudae-section-status">
                 <h2>Status</h2>
                 <div class="automudae-section-body">
-                    <div class="automudae-row">
-                        <span>Rolls:</span>
-                        <div><span>(</span><span id="automudae-field-rolls-left">?</span><span>/</span><span id="automudae-field-rolls-max">?</span><span>)</span></div>
+                    <div class="automudae-row-expandable">
+                        <div class="automudae-row">
+                            <span>Rolls:</span>
+                            <div><span>(</span><span id="automudae-field-rolls-left">?</span><span>/</span><span id="automudae-field-rolls-max">?</span><span>)</span></div>
+                        </div>
+                        <div>
+                            <div class="automudae-row">
+                                <span>9:</span>
+                                <div><span>(</span><span>?</span><span>/</span><span>?</span><span>)</span></div>
+                            </div>
+                            <div class="automudae-row">
+                                <span>18:</span>
+                                <div><span>(</span><span>?</span><span>/</span><span>?</span><span>)</span></div>
+                            </div>
+                            <div class="automudae-row">
+                                <span>27:</span>
+                                <div><span>(</span><span>?</span><span>/</span><span>?</span><span>)</span></div>
+                            </div>
+                            <div class="automudae-row">
+                                <span>36:</span>
+                                <div><span>(</span><span>?</span><span>/</span><span>?</span><span>)</span></div>
+                            </div>
+                        </div>
                     </div>
                     <div class="automudae-row">
                         <span>Power:</span>
