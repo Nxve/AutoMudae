@@ -148,12 +148,6 @@
 
     #automudae-section-status .automudae-section-body {
         padding: 0;
-        gap: 0;
-    }
-    
-    .automudae-row-expandable {
-        padding: 3px;
-        display: block;
     }
 
     .automudae-row {
@@ -162,10 +156,30 @@
         justify-content: space-between;
         gap: 10px;
     }
+    
+    .automudae-row-expandable {
+        padding: 3px;
+        display: block !important;
+    }
+
+    .automudae-row-expandable > div:not(:first-child) {
+        background-color: var(--background-primary);
+        max-height: 0px;
+        overflow: hidden;
+        transition: max-height 300ms linear;
+    }
+    
+    .automudae-row-expandable:hover > div:not(:first-child) {
+        max-height: 300px;
+    }
+    
+    .automudae-row-expandable > div:not(:first-child) > .automudae-row:hover {
+        background-color: var(--background-accent);
+    }
 
     [id^=automudae-panel] > div {
-        max-height: 300px;
-        transition: max-height 200ms linear;
+        max-height: 600px;
+        transition: max-height 400ms linear;
     }
 
     [id^=automudae-panel].collapsed {
