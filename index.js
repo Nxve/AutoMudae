@@ -1,11 +1,11 @@
 // ==UserScript==
-// @name         AutoMudae
+// @name         AutoMudae_Multi
 // @namespace    nxve
-// @version      0.4.3
+// @version      0.5.0
 // @description  Automates the use of Mudae bot in Discord
 // @author       Nxve
-// @updateURL    https://raw.githubusercontent.com/Nxve/AutoMudae/main/index.js
-// @downloadURL  https://raw.githubusercontent.com/Nxve/AutoMudae/main/index.js
+// @updateURL    https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/index.js
+// @downloadURL  https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/index.js
 // @supportURL   https://github.com/Nxve/AutoMudae/issues
 // @match        https://discord.com/channels/*
 // @exclude      https://discord.com/channels/@me
@@ -14,10 +14,10 @@
 // @grant        GM_addStyle
 // @grant        GM_getValue
 // @grant        GM_setValue
-// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/logger.js
-// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/enum.js
-// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/css.js
-// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/sound.js
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/logger.js
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/enum.js
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/css.js
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/sound.js
 // ==/UserScript==
 
 (function () {
@@ -267,6 +267,8 @@
             return "Couldn't retrieve active guild.";
         }
 
+        kakeraCode
+
         if (!guildId || !channelId) {
             return "Couldn't retrieve active guild or channel.";
         }
@@ -338,7 +340,7 @@
         el_InfoPanel.innerHTML = `
         <h1>Auto-Mudae Info</h1>
         <div>
-            <div class="automudae-category-panel">
+            <div class="automudae-category">
                 <h2>Collected</h2>
                 <div id="automudae-info-category-resume">
                     <div>
@@ -351,7 +353,7 @@
                     </div>
                 </div>
             </div>
-            <div class="automudae-category-panel">
+            <div class="automudae-category">
                 <h2>Status</h2>
                 <div>
                     <div>
@@ -384,7 +386,7 @@
         el_ConfigPanel.innerHTML = `
         <h1>Auto-Mudae Config</h1>
         <div>
-            <div class="automudae-category-panel" id="automudae-config-category-kakera">
+            <div class="automudae-category" id="automudae-category-kakera">
                 <h2>Kakera to Collect</h2>
                 <div>
                     <div><input type="checkbox" id="opt_kakera_p"><label for="opt_kakera_p"><img class="emoji" src="https://cdn.discordapp.com/emojis/609264156347990016.webp?quality=lossless"></label></div>
@@ -398,13 +400,13 @@
                     <div><input type="checkbox" id="opt_kakera_l"><label for="opt_kakera_l"><img class="emoji" src="https://cdn.discordapp.com/emojis/815961697918779422.webp?quality=lossless"></label></div>
                 </div>
             </div>
-            <div class="automudae-category-panel">
+            <div class="automudae-category">
                 <h2>Interesting Mentions</h2>
                 <div>
                     <textarea spellcheck="false"></textarea>
                 </div>
             </div>
-            <div class="automudae-category-panel">
+            <div class="automudae-category">
                 <h2>Roll Type</h2>
                 <div>
                     <div>
@@ -413,7 +415,7 @@
                     </div>
                 </div>
             </div>
-            <div class="automudae-category-panel">
+            <div class="automudae-category">
                 <h2>Sound</h2>
                 <div>
                     <div>
@@ -424,7 +426,7 @@
                     </div>
                 </div>
             </div>
-            <div class="automudae-category-panel">
+            <div class="automudae-category">
                 <h2>Extra</h2>
                 <div>
                     <div>

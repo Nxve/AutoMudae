@@ -112,48 +112,47 @@
         background-color: var(--background-primary);
     }
 
-    .automudae-category-panel {
+    .automudae-category {
         margin-bottom: 5px;
     }
 
-    .automudae-category-panel > div {
+    .automudae-category > div {
         display: flex;
         padding: 4px;
         flex-wrap: wrap;
     }
 
-    .automudae-category-panel > div > div:hover {
+    .automudae-category > div > div:hover {
         background-color: var(--button-secondary-background-hover);
     }
 
-    .automudae-category-panel > div > div {
+    .automudae-category > div > div {
         display: flex;
         padding-inline: 3px;
         border-radius: 5px;
     }
 
-    #automudae-config-category-kakera > div {
+    #automudae-category-kakera > div {
         justify-content: space-between;
     }
 
-    #automudae-config-category-kakera > div > div {
+    #automudae-category-kakera > div > div {
         flex-direction: column;
         padding: 0;
     }
 
-    #automudae-panel-info .automudae-category-panel > div > div {
-        width: 100%;
+    #automudae-panel-info .automudae-category > div > div {
         align-items: center;
         justify-content: space-between;
         gap: 10px;
     }
 
-    #automudae-panel-info .automudae-category-panel > div > div > div {
+    #automudae-panel-info .automudae-category > div > div > div {
         display: flex;
         align-items: center;
     }
 
-    #automudae-panel-info .automudae-category-panel > div {
+    #automudae-panel-info .automudae-category > div {
         gap: 8px;
     }
 
