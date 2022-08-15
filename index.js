@@ -1,11 +1,11 @@
 // ==UserScript==
-// @name         AutoMudae
+// @name         AutoMudae_Multi
 // @namespace    nxve
-// @version      0.5.8
+// @version      0.5.9
 // @description  Automates the use of Mudae bot in Discord
 // @author       Nxve
-// @updateURL    https://raw.githubusercontent.com/Nxve/AutoMudae/main/index.js
-// @downloadURL  https://raw.githubusercontent.com/Nxve/AutoMudae/main/index.js
+// @updateURL    https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/index.js
+// @downloadURL  https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/index.js
 // @supportURL   https://github.com/Nxve/AutoMudae/issues
 // @match        https://discord.com/channels/*
 // @exclude      https://discord.com/channels/@me
@@ -15,10 +15,10 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_info
-// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/logger.js
-// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/enum.js
-// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/css.js
-// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/sound.js
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/logger.js
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/enum.js
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/css.js
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/sound.js
 // ==/UserScript==
 
 (function () {
@@ -207,7 +207,7 @@
         },
 
         roll: function () {
-            const rollPreferences = this.preferences.get("roll");
+            const rollPreferences = this.preferences.get(E.PREFERENCES.ROLL);
 
             if (!rollPreferences.slash) {
                 return Discord.Message.send(`$${rollPreferences.type}`);
@@ -226,7 +226,7 @@
         },
 
         savePreferences: function () {
-            GM_setValue("preferences", JSON.stringify(this.preferences));
+            GM_setValue(E.GMVALUE.PREFERENCES, JSON.stringify(this.preferences));
         },
 
         setState: function (E_state) {
@@ -453,23 +453,23 @@
 
             const el_OptMentions = document.getElementById("opt-mentions");
 
-            el_OptMentions.value = this.preferences.get("mentions");
+            el_OptMentions.value = this.preferences.get(E.PREFERENCES.MENTIONS);
 
             el_OptMentions.onblur = function () {
-                AutoMudae.preferences.set("mentions", this.value);
+                AutoMudae.preferences.set(E.PREFERENCES.MENTIONS, this.value);
                 AutoMudae.savePreferences();
             };
 
             const el_OptRollType = document.getElementById("opt-roll-type");
 
-            el_OptRollType.value = this.preferences.get("roll").type;
+            el_OptRollType.value = this.preferences.get(E.PREFERENCES.ROLL).type;
 
             el_OptRollType.onchange = function () {
-                const rollPreferences = AutoMudae.preferences.get("roll");
+                const rollPreferences = AutoMudae.preferences.get(E.PREFERENCES.ROLL);
 
                 rollPreferences.type = this.value;
 
-                AutoMudae.preferences.set("roll", rollPreferences);
+                AutoMudae.preferences.set(E.PREFERENCES.ROLL, rollPreferences);
             };
 
             /// These are used later for info update
@@ -524,24 +524,24 @@
             Discord.info.set(E.DISCORD_INFO.USER_USERNAME, username);
 
             const defaultPreferences = `[
-                ["kakera", {"kakeraP": false, "kakera": false, "kakeraT": false, "kakeraG": false, "kakeraY": false, "kakeraO": false, "kakeraR": false, "kakeraW": false, "kakeraL": false}],
-                ["mentions", ""],
-                ["roll", {"type":"wx","slash":false}],
-                ["sound", {"marry":true,"cantmarry":true}],
-                ["extra", {"logger":false}]
+                ["${E.PREFERENCES.KAKERA}", {"kakeraP": false, "kakera": false, "kakeraT": false, "kakeraG": false, "kakeraY": false, "kakeraO": false, "kakeraR": false, "kakeraW": false, "kakeraL": false}],
+                ["${E.PREFERENCES.MENTIONS}", ""],
+                ["${E.PREFERENCES.ROLL}", {"type":"wx","slash":false}],
+                ["${E.PREFERENCES.SOUND}", {"marry":true,"cantmarry":true}],
+                ["${E.PREFERENCES.EXTRA}", {"logger":false}]
             ]`;
 
             const versionToNumber = ver => Number(ver.replace(/\./g, ''));
 
-            const savedVersion = GM_getValue("version", null);
+            const savedVersion = GM_getValue(E.GMVALUE.VERSION, null);
 
             const isPreferencesOutdated = !savedVersion || versionToNumber(savedVersion) < versionToNumber(GM_info.script.version);
 
-            const stringifiedPreferences = isPreferencesOutdated ? defaultPreferences : GM_getValue("preferences", defaultPreferences);
+            const stringifiedPreferences = isPreferencesOutdated ? defaultPreferences : GM_getValue(E.GMVALUE.PREFERENCES, defaultPreferences);
 
             this.preferences = new Map(JSON.parse(stringifiedPreferences));
 
-            GM_setValue("version", GM_info.script.version);
+            GM_setValue(E.GMVALUE.VERSION, GM_info.script.version);
         },
 
         tryEnable: function () {
@@ -565,7 +565,7 @@
 
             DOM.el_MainButton.onclick = null;
 
-            if (this.preferences.get('extra').logger) {
+            if (this.preferences.get(E.PREFERENCES.EXTRA).logger) {
                 const doNothing = () => { };
 
                 for (const method in logger) {
@@ -771,7 +771,7 @@
                         el_CharacterListItem.appendChild(document.createTextNode(characterName));
                         DOM.el_FieldCharactersList.appendChild(el_CharacterListItem);
 
-                        if (AutoMudae.preferences.get("sound").marry) SOUND.marry();
+                        if (AutoMudae.preferences.get(E.PREFERENCES.SOUND).marry) SOUND.marry();
                         logger.new(`Got character ${characterName}!`);
                         return;
                     }
@@ -838,7 +838,7 @@
                             return;
                         }
 
-                        if (AutoMudae.preferences.get("sound").cantmarry) SOUND.cantMarry();
+                        if (AutoMudae.preferences.get(E.PREFERENCES.SOUND).cantmarry) SOUND.cantMarry();
                         logger.warn(`Can't marry right now. You may lose character [${characterName}]`);
                     }
 
@@ -871,7 +871,7 @@
 
                         const hasEnoughPower = kakeraCode === E.KAKERA.PURPLE || AutoMudae.info.get(E.MUDAE_INFO.POWER) > AutoMudae.info.get(E.MUDAE_INFO.CONSUMPTION);
 
-                        if (hasEnoughPower && AutoMudae.preferences.get("kakera")[kakeraCode]) {
+                        if (hasEnoughPower && AutoMudae.preferences.get(E.PREFERENCES.KAKERA)[kakeraCode]) {
                             Discord.Message.react(el_Message, E.EMOJI[kakeraCode]);
                         }
                     }, 100);

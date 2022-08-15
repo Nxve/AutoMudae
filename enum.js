@@ -52,6 +52,19 @@
         LIGHT: 'kakeraL',
     };
 
+    E.GMVALUE = {
+        PREFERENCES: 'preferences',
+        VERSION: 'version'
+    };
+
+    E.PREFERENCES = {
+        KAKERA: 'kakera',
+        MENTIONS: 'mentions',
+        ROLL: 'roll',
+        SOUND: 'sound',
+        EXTRA: 'extra'
+    };
+
     unsafeWindow.AUTOMUDAE ??= {};
     unsafeWindow.AUTOMUDAE.E = E;
     console.info("[AUTO MUDAE][i] Loaded ENUM.");
