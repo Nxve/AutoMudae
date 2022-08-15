@@ -46,10 +46,10 @@
         CYAN: 'kakeraT',
         GREEN: 'kakeraG',
         YELLOW: 'kakeraY',
-        LIGHT: 'kakeraL',
         ORANGE: 'kakeraO',
         RED: 'kakeraR',
         RAINBOW: 'kakeraW',
+        LIGHT: 'kakeraL',
     };
 
     unsafeWindow.AUTOMUDAE ??= {};
