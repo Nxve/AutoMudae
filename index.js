@@ -1,11 +1,11 @@
 // ==UserScript==
-// @name         AutoMudae_Multi
+// @name         AutoMudae
 // @namespace    nxve
 // @version      0.5.8
 // @description  Automates the use of Mudae bot in Discord
 // @author       Nxve
-// @updateURL    https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/index.js
-// @downloadURL  https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/index.js
+// @updateURL    https://raw.githubusercontent.com/Nxve/AutoMudae/main/index.js
+// @downloadURL  https://raw.githubusercontent.com/Nxve/AutoMudae/main/index.js
 // @supportURL   https://github.com/Nxve/AutoMudae/issues
 // @match        https://discord.com/channels/*
 // @exclude      https://discord.com/channels/@me
@@ -15,10 +15,10 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_info
-// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/logger.js
-// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/enum.js
-// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/css.js
-// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/sound.js
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/logger.js
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/enum.js
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/css.js
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/sound.js
 // ==/UserScript==
 
 (function () {
