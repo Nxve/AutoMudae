@@ -62,6 +62,17 @@
         EXTRA: 'extra'
     };
 
+    E.INFO_FIELD = {
+        KAKERA: 'kakera',
+        COLLECTED_CHARACTERS: 'collected-characters',
+        ROLLS_LEFT: 'rolls-left',
+        ROLLS_MAX: 'rolls-max',
+        POWER: 'power',
+        POWER_CONSUMPTION: 'consumption',
+        CAN_MARRY: 'marry',
+        CAN_RT: 'rt'
+    };
+
     unsafeWindow.AUTOMUDAE ??= {};
     unsafeWindow.AUTOMUDAE.E = E;
     console.info("[AUTO MUDAE][i] Loaded ENUM.");
