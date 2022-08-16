@@ -2,12 +2,9 @@
     const E = {};
 
     E.DISCORD_INFO = {
-        TOKEN: 'token',
         CHANNEL_ID: 'channel_id',
         GUILD_ID: 'guild_id',
-        SESSION_ID: 'session_id',
-        USER_ID: 'user_id',
-        USER_USERNAME: 'user_username'
+        SESSION_ID: 'session_id'
     };
     
     E.AUTOMUDAE_STATE = {
