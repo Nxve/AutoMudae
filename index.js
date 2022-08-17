@@ -130,22 +130,37 @@
         username
         avatar
         token
+        nick
         info
         sendTUTimer
 
-        constructor(id, username, avatar, token){
+        constructor(id, username, avatar, token) {
             this.id = id;
             this.username = username;
             this.avatar = avatar;
             this.token = token;
             this.info = new Map();
+
+            const guildId = window.location.pathname.split("/")[2];
+
+            fetch(`https://discord.com/api/v9/users/${id}/profile?guild_id=${guildId}`, {
+                "headers": {
+                    "authorization": token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const {guild_member: {nick}} = data;
+                this.nick = nick;
+            })
+            .catch(err => logger.error(`Couldn't retrieve the nick for user [${username}]`, err));
         }
 
-        hasNeededInfo () {
+        hasNeededInfo() {
             return [E.MUDAE_INFO.ROLLS_MAX, E.MUDAE_INFO.ROLLS_LEFT, E.MUDAE_INFO.POWER, E.MUDAE_INFO.CAN_RT, E.MUDAE_INFO.CAN_MARRY, E.MUDAE_INFO.CONSUMPTION].every(info => this.info.has(info), this);
         }
 
-        send (content) {
+        send(content) {
             const now = performance.now();
 
             if (now - Discord.cdSendMessage < INTERVAL_SEND_MESSAGE) return;
@@ -162,7 +177,7 @@
             Discord.cdSendMessage = now;
         }
 
-        react (el_Message, E_EMOJI) {
+        react(el_Message, E_EMOJI) {
             fetch(`https://discord.com/api/v9/channels/${Discord.info.get(E.DISCORD_INFO.CHANNEL_ID)}/messages/${Discord.Message.getId(el_Message)}/reactions/${E_EMOJI}/%40me`, {
                 "method": "PUT",
                 "headers": {
@@ -171,13 +186,13 @@
             });
         }
 
-        setTUTimer (ms){
+        setTUTimer(ms) {
             if (this.sendTUTimer) clearTimeout(this.sendTUTimer);
-                    
+
             this.sendTUTimer = setTimeout((user) => { user.send("$tu") }, ms, this);
         }
 
-        roll () {
+        roll() {
             const rollPreferences = AutoMudae.preferences.get(E.PREFERENCES.ROLL);
 
             if (!rollPreferences.slash) {
@@ -200,13 +215,12 @@
     const AutoMudae = {
         users: [], /// MudaeUser[]
         preferences: null, /// Map<string, any>
-        info: new Map(),
         state: E.AUTOMUDAE_STATE.INJECT,
         chatObserver: new MutationObserver(ms => ms.forEach(m => { if (m.addedNodes.length) { handleNewChatAppend(m.addedNodes) } })),
         cdGatherInfo: 0,
         cdRoll: 0,
 
-        hasNeededInfo: function() {
+        hasNeededInfo: function () {
             return this.users.every(user => user.hasNeededInfo());
         },
 
@@ -288,10 +302,12 @@
                 return;
             }
 
-            //# Clear state for current mudaeUsers
             this.chatObserver.disconnect();
             this.Timers.clear();
-            this.info.clear();
+            this.users.forEach(user => {
+                if (user.sendTUTimer) clearTimeout(user.sendTUTimer);
+                user.info.clear();
+            });
             this.setState(E.AUTOMUDAE_STATE.IDLE);
             logger.log("Turned off.");
         },
@@ -506,13 +522,13 @@
         setup: function () {
             const windowPathname = window.location?.pathname;
 
-            if (!windowPathname){
+            if (!windowPathname) {
                 return "Couldn't retrieve current window URL.";
             }
 
             const [_, pathDiscriminator, guildId, channelId] = windowPathname.split("/");
 
-            if (pathDiscriminator !== "channels"){
+            if (pathDiscriminator !== "channels") {
                 return "You must be viewing the desired channel.";
             }
 
@@ -535,18 +551,18 @@
             const storeUsers = JSON.parse(localStorage.MultiAccountStore)?._state.users;
             const tokens = JSON.parse(localStorage.tokens);
 
-            if (!storeUsers || !tokens){
+            if (!storeUsers || !tokens) {
                 return "Couldn't retrieve information about your accounts.";
             }
 
             const users = [];
 
             for (let i = 0; i < storeUsers.length; i++) {
-                const {id, username, avatar} = storeUsers[i];
-                
+                const { id, username, avatar } = storeUsers[i];
+
                 const token = tokens[id];
 
-                if (!token){
+                if (!token) {
                     return `Couldn't retrieve information about user [${username}]`;
                 }
 
@@ -565,11 +581,9 @@
                 ["${E.PREFERENCES.EXTRA}", {"logger":false}]
             ]`;
 
-            const versionToNumber = ver => Number(ver.replace(/\./g, ''));
-
             const savedVersion = GM_getValue(E.GMVALUE.VERSION, null);
 
-            const isPreferencesOutdated = !savedVersion || versionToNumber(savedVersion) < versionToNumber(GM_info.script.version);
+            const isPreferencesOutdated = !savedVersion || savedVersion !== GM_info.script.version;
 
             const stringifiedPreferences = isPreferencesOutdated ? defaultPreferences : GM_getValue(E.GMVALUE.PREFERENCES, defaultPreferences);
 
@@ -623,17 +637,17 @@
     window.AutoMudae = AutoMudae;
 
     /// Bot Inner Thinking
-    function updateInfoPanel(E_INFO_FIELD, content, user){
+    function updateInfoPanel(E_INFO_FIELD, content, user) {
         const el_OverallField = document.getElementById(`automudae-field-${E_INFO_FIELD}`);
 
-        if (E_INFO_FIELD === E.INFO_FIELD.KAKERA){
+        if (E_INFO_FIELD === E.INFO_FIELD.KAKERA) {
             const newKakera = Number(el_OverallField.innerText) + Number(content);
 
             el_OverallField.innerText = newKakera;
             return;
         }
 
-        if (E_INFO_FIELD === E.INFO_FIELD.COLLECTED_CHARACTERS){
+        if (E_INFO_FIELD === E.INFO_FIELD.COLLECTED_CHARACTERS) {
             const el_CharacterItem = document.createElement('li');
             el_CharacterItem.appendChild(document.createTextNode((user ? `[${user.username}]` : '') + content));
             el_OverallField.appendChild(el_CharacterItem);
@@ -645,31 +659,31 @@
 
         el_UserField.innerText = content;
 
-        if (E_INFO_FIELD === E.INFO_FIELD.ROLLS_LEFT || E_INFO_FIELD === E.INFO_FIELD.ROLLS_MAX){
+        if (E_INFO_FIELD === E.INFO_FIELD.ROLLS_LEFT || E_INFO_FIELD === E.INFO_FIELD.ROLLS_MAX) {
             const numeralFields = [...document.querySelectorAll(`[id^='automudae-field-${E_INFO_FIELD}-']`)].map(el_UserField => el_UserField.innerText).filter(text => /\d+/.test(text));
-            
+
             if (numeralFields.length > 0) el_OverallField.innerText = numeralFields.reduce((total, current) => Number(total) + Number(current));
-            
+
             return;
         }
 
-        if (E_INFO_FIELD === E.INFO_FIELD.POWER){
-            const highestPower = [...document.querySelectorAll(`[id^='automudae-field-${E_INFO_FIELD}-']`)].map(el_UserField => el_UserField.innerText).filter(text => /\d+/.test(text)).sort((a,b)=>Number(a)-Number(b)).last();
+        if (E_INFO_FIELD === E.INFO_FIELD.POWER) {
+            const highestPower = [...document.querySelectorAll(`[id^='automudae-field-${E_INFO_FIELD}-']`)].map(el_UserField => el_UserField.innerText).filter(text => /\d+/.test(text)).sort((a, b) => Number(a) - Number(b)).last();
 
             if (highestPower) el_OverallField.innerText = `↓ ${highestPower}`;
 
             return;
         }
 
-        if (E_INFO_FIELD === E.INFO_FIELD.POWER_CONSUMPTION){
-            const lowestConsumption = [...document.querySelectorAll(`[id^='automudae-field-${E_INFO_FIELD}-']`)].map(el_UserField => el_UserField.innerText).filter(text => /\d+/.test(text)).sort((a,b)=>Number(a)-Number(b))[0];
+        if (E_INFO_FIELD === E.INFO_FIELD.POWER_CONSUMPTION) {
+            const lowestConsumption = [...document.querySelectorAll(`[id^='automudae-field-${E_INFO_FIELD}-']`)].map(el_UserField => el_UserField.innerText).filter(text => /\d+/.test(text)).sort((a, b) => Number(a) - Number(b))[0];
 
             if (lowestConsumption) el_OverallField.innerText = `↑ ${lowestConsumption}`;
 
             return;
         }
 
-        if (E_INFO_FIELD === E.INFO_FIELD.CAN_MARRY || E_INFO_FIELD === E.INFO_FIELD.CAN_RT){
+        if (E_INFO_FIELD === E.INFO_FIELD.CAN_MARRY || E_INFO_FIELD === E.INFO_FIELD.CAN_RT) {
             const hasAny = [...document.querySelectorAll(`[id^='automudae-field-${E_INFO_FIELD}-']`)].some(el_UserField => el_UserField.innerText === "Yes");
 
             el_OverallField.innerText = hasAny ? "Yes" : "No";
@@ -705,6 +719,7 @@
                 : null;
 
             /// Handle player commands
+            //# Check for the given username at the start of the command response
             if (el_PreviousElement) {
                 const el_PreviousMessage = el_PreviousElement;
 
@@ -742,12 +757,12 @@
 
                             if (/\$rt/.test(mudaeResponse)) {
                                 const cooldownRTMatch = /: (.+) min. \(\$rtu\)/.exec(mudaeResponse);
-                        
+
                                 user.info.set(E.MUDAE_INFO.CAN_RT, !cooldownRTMatch);
-                        
+
                                 if (cooldownRTMatch) {
                                     logger.log(`Scheduled a RT check for user [${user.username}]. [${cooldownRTMatch[1]}]`);
-                        
+
                                     user.setTUTimer(AutoMudae.mudaeTimeToMs(cooldownRTMatch[1]) + 500);
                                 }
 
@@ -769,7 +784,7 @@
 
                                 user.info.set(E.MUDAE_INFO.CONSUMPTION, consumption);
 
-                                updateInfoPanel(E.INFO_FIELD.POWER_CONSUMPTION, consumption, user);               
+                                updateInfoPanel(E.INFO_FIELD.POWER_CONSUMPTION, consumption, user);
                             }
 
                             if (!user.hasNeededInfo()) {
@@ -801,7 +816,6 @@
                     if (user) {
                         const kakeraType = el_Strong.previousElementSibling?.firstElementChild?.alt.replace(':', '');
 
-                        //# Detect if it has 10+keys, so the cost is halved
                         const powerCost = kakeraType === E.KAKERA.PURPLE ? 0 : user.info.get(E.MUDAE_INFO.CONSUMPTION);
 
                         if (powerCost > 0) {
@@ -812,7 +826,7 @@
                         }
 
                         el_Message.classList.add('plus');
-                        updateInfoPanel(E.INFO_FIELD.KAKERA, kakeraQuantity);               
+                        updateInfoPanel(E.INFO_FIELD.KAKERA, kakeraQuantity);
                         logger.new(`+${kakeraQuantity} kakera! [Remaining Power for user [${user.username}]: ${user.info.get(E.MUDAE_INFO.POWER)}%]`);
                         return;
                     }
@@ -833,7 +847,7 @@
                     if (user) {
                         user.info.set(E.MUDAE_INFO.CAN_MARRY, false);
                         el_Message.classList.add('plus');
-                        
+
                         updateInfoPanel(E.INFO_FIELD.CAN_MARRY, "No", user);
                         updateInfoPanel(E.INFO_FIELD.COLLECTED_CHARACTERS, characterName, user);
 
@@ -844,10 +858,13 @@
                 }
             }
 
+            //# Check for wish steals
+
             const el_ImageWrapper = el_Message.querySelector("div[class^='embedDescription'] ~ div[class^='imageContent'] div[class^='imageWrapper']");
 
             /// Handle character messages
             if (el_ImageWrapper) {
+                //# Add visual hints for messages lifetime
                 const el_Footer = el_Message.querySelector("span[class^='embedFooterText']");
 
                 const isCharacterLookupMessage = (el_Footer && (/^\d+ \/ \d+$/.test(el_Footer.innerText) || /^Pertence a .+ ~~ \d+ \/ \d+$/.test(el_Footer.innerText)));
@@ -870,6 +887,7 @@
                     }
                 } else {
                     //# Remove roll count for non-slash command
+                    //# Could check for last user message, but there's no guarantee, other players could break this
                 }
 
                 if (!el_Footer || el_Footer.innerText.includes("2 ROLLS RESTANTES") && !el_Footer.innerText.includes("Pertence")) {
@@ -880,7 +898,7 @@
                     for (let i = 0; i < el_Mentions.length; i++) {
                         const mentionedUser = el_Mentions[i].innerText.substr(1);
 
-                        if (AutoMudae.users.some(user => user.username === mentionedUser) || AutoMudae.preferences.get(E.PREFERENCES.MENTIONS).split(",").map(nick => nick.trim()).includes(mentionedUser)) {
+                        if (AutoMudae.users.some(user => user.nick === mentionedUser) || AutoMudae.preferences.get(E.PREFERENCES.MENTIONS).split(",").map(nick => nick.trim()).includes(mentionedUser)) {
                             el_InterestingCharacter = el_Message;
                             break;
                         }
@@ -916,6 +934,8 @@
                     return;
                 }
 
+                //# Log obtained keys/soulmates
+
                 /// Observe kakera reactions append
                 if (el_Footer.innerText.includes("Pertence")) {
                     const el_MessageAccessories = el_Message.querySelector("div[id^='message-accessories']");
@@ -943,8 +963,8 @@
                         if (!AutoMudae.preferences.get(E.PREFERENCES.KAKERA)[kakeraCode]) return;
 
                         const userWithEnoughPower = kakeraCode === E.KAKERA.PURPLE
-                        ? AutoMudae.users[0]
-                        : AutoMudae.users.find(user => user.info.get(E.MUDAE_INFO.POWER) > user.info.get(E.MUDAE_INFO.CONSUMPTION));
+                            ? AutoMudae.users[0]
+                            : AutoMudae.users.find(user => user.info.get(E.MUDAE_INFO.POWER) > user.info.get(E.MUDAE_INFO.CONSUMPTION));
 
                         if (userWithEnoughPower) {
                             userWithEnoughPower.react(el_Message, E.EMOJI[kakeraCode]);
@@ -960,7 +980,7 @@
     function think() {
         const now = performance.now();
 
-        if (!AutoMudae.hasNeededInfo()){
+        if (!AutoMudae.hasNeededInfo()) {
             if (now - AutoMudae.cdGatherInfo < 1000) return;
 
             for (let i = 0; i < AutoMudae.users.length; i++) {
@@ -968,9 +988,9 @@
 
                 if (!user.hasNeededInfo()) {
                     logger.log(`Gathering needed info for user [${user.username}]..`);
-        
+
                     user.send("$tu");
-        
+
                     break;
                 }
 
@@ -979,14 +999,14 @@
             AutoMudae.cdGatherInfo = now;
             return;
         }
-        
+
         const userWithRolls = AutoMudae.users.find(user => user.info.get(E.MUDAE_INFO.ROLLS_LEFT) > 0);
 
         if (userWithRolls && now - Discord.lastMessageTime > INTERVAL_ROLL && now - AutoMudae.cdRoll > (INTERVAL_ROLL * .5)) {
             userWithRolls.roll();
             AutoMudae.cdRoll = now;
         }
-        
+
         //# Warn if no rolls left, can still marry and is last reset
     };
 
