@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AutoMudae_Multi
 // @namespace    nxve
-// @version      0.6.2
+// @version      0.6.3
 // @description  Automates the use of Mudae bot in Discord
 // @author       Nxve
 // @updateURL    https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/index.js
@@ -219,13 +219,21 @@
         chatObserver: new MutationObserver(ms => ms.forEach(m => { if (m.addedNodes.length) { handleNewChatAppend(m.addedNodes) } })),
         cdGatherInfo: 0,
         cdRoll: 0,
+        lastResetHash: '',
+
+        timers: {
+            _t: new Map(),
+            set: function (identifier, callback, ms, isInterval = false) {
+                if (this._t.has(identifier)) clearTimeout(identifier);
+                const timer = isInterval ? setInterval(callback, ms) : setTimeout(callback, ms);
+                this._t.set(identifier, timer);
+                if (DEBUG) logger.debug(`Added timer [${identifier}][${ms}]`);
+            },
+            clear: function () { [...this._t.values()].forEach(t => { clearTimeout(t); clearInterval(t) }); this._t.clear(); }
+        },
 
         hasNeededInfo: function () {
             return this.users.every(user => user.hasNeededInfo());
-        },
-
-        isRunning: function () {
-            return this.state === E.AUTOMUDAE_STATE.RUN
         },
 
         isLastReset: function () {
@@ -248,18 +256,7 @@
             if (m) totalMs += Number(m) * 60 * 1000;
 
             return totalMs;
-        },
-
-        Timers: {
-            _t: new Map(),
-            set: function (identifier, callback, ms, isInterval = false) {
-                if (this._t.has(identifier)) clearTimeout(identifier);
-                const timer = isInterval ? setInterval(callback, ms) : setTimeout(callback, ms);
-                this._t.set(identifier, timer);
-                if (DEBUG) logger.debug(`Added timer [${identifier}][${ms}]`);
-            },
-            clear: function () { [...this._t.values()].forEach(t => { clearTimeout(t); clearInterval(t) }); this._t.clear(); }
-        },
+        },        
 
         savePreferences: function () {
             GM_setValue(E.GMVALUE.PREFERENCES, JSON.stringify(this.preferences));
@@ -294,8 +291,8 @@
                     msToStartResetHandler = nextReset - now;
                 }
 
-                this.Timers.set('think', think, INTERVAL_THINK, true);
-                this.Timers.set('initHourlyResetHandler', () => { handleHourlyReset(); AutoMudae.Timers.set('HandleHourlyReset', handleHourlyReset, 1 * 60 * 60 * 1000, true) }, msToStartResetHandler);
+                this.timers.set('think', think, INTERVAL_THINK, true);
+                this.timers.set('initHourlyResetHandler', () => { handleHourlyReset(); AutoMudae.timers.set('HandleHourlyReset', handleHourlyReset, 1 * 60 * 60 * 1000, true) }, msToStartResetHandler);
                 this.chatObserver.observe(DOM.el_Chat, { childList: true });
                 this.setState(E.AUTOMUDAE_STATE.RUN);
                 logger.log("Running..");
@@ -303,7 +300,7 @@
             }
 
             this.chatObserver.disconnect();
-            this.Timers.clear();
+            this.timers.clear();
             this.users.forEach(user => {
                 if (user.sendTUTimer) clearTimeout(user.sendTUTimer);
                 user.info.clear();
@@ -456,6 +453,9 @@
                         <div>
                             <input type="checkbox" id="opt-sound-cantmarry"><label for="opt-sound-cantmarry"><span>When can't marry</span></label>
                         </div>
+                        <div>
+                            <input type="checkbox" id="opt-sound-lastresetnorolls"><label for="opt-sound-lastresetnorolls"><span>When can't roll in the last reset</span></label>
+                        </div>
                     </div>
                 </div>
                 <div class="automudae-section">
@@ -577,7 +577,7 @@
                 ["${E.PREFERENCES.KAKERA}", {"kakeraP": false, "kakera": false, "kakeraT": false, "kakeraG": false, "kakeraY": false, "kakeraO": false, "kakeraR": false, "kakeraW": false, "kakeraL": false}],
                 ["${E.PREFERENCES.MENTIONS}", ""],
                 ["${E.PREFERENCES.ROLL}", {"type":"wx","slash":false}],
-                ["${E.PREFERENCES.SOUND}", {"marry":true,"cantmarry":true}],
+                ["${E.PREFERENCES.SOUND}", {"marry":true,"cantmarry":true, "lastresetnorolls":true}],
                 ["${E.PREFERENCES.EXTRA}", {"logger":false}]
             ]`;
 
@@ -629,6 +629,10 @@
 
             this.render();
             this.tryEnable();
+        },
+
+        getMarriageableUser: function(){
+            return this.users.find(user => user.info.get(E.MUDAE_INFO.CAN_MARRY));
         }
     };
 
@@ -719,7 +723,6 @@
                 : null;
 
             /// Handle player commands
-            //# Check for the given username at the start of the command response
             if (el_PreviousElement) {
                 const el_PreviousMessage = el_PreviousElement;
 
@@ -729,7 +732,7 @@
                     const command = el_PreviousMessage.querySelector("div[id^='message-content']")?.innerText;
                     const mudaeResponse = el_Message.querySelector("div[id^='message-content']")?.innerText;
 
-                    if (command && mudaeResponse) {
+                    if (command && mudaeResponse && mudaeResponse.startsWith(`${user.username}, `)) {
                         if (command === "$tu") {
                             const matchRolls = /tem (\d+) rolls/.exec(mudaeResponse);
                             if (matchRolls) {
@@ -804,7 +807,7 @@
 
             const el_Strong = el_Message.querySelector("div[id^='message-content'] span[class^='emojiContainer'] ~ strong");
 
-            /// Handle kakera collect feedback
+            /// Handle kakera collection feedback
             if (el_Strong) {
                 const match = /^(.+)\s\+(\d+)$/.exec(el_Strong.innerText);
 
@@ -814,7 +817,7 @@
                     const user = AutoMudae.users.find(user => user.username === messageUsername);
 
                     if (user) {
-                        const kakeraType = el_Strong.previousElementSibling?.firstElementChild?.alt.replace(':', '');
+                        const kakeraType = el_Strong.previousElementSibling?.firstElementChild?.alt.replace(/:/g, '');
 
                         const powerCost = kakeraType === E.KAKERA.PURPLE ? 0 : user.info.get(E.MUDAE_INFO.CONSUMPTION);
 
@@ -833,7 +836,7 @@
                 }
             }
 
-            /// Handle character marry feedback
+            /// Handle marriage feedback
             const messageContent = el_Message.querySelector("div[id^='message-content']")?.innerText;
 
             if (messageContent) {
@@ -905,9 +908,9 @@
                     }
 
                     let characterName;
-                    const marriableUser = AutoMudae.users.find(user => user.info.get(E.MUDAE_INFO.CAN_MARRY));
+                    const marriageableUser = AutoMudae.getMarriageableUser();
 
-                    if (marriableUser && !el_InterestingCharacter && AutoMudae.isLastReset()) {
+                    if (marriageableUser && !el_InterestingCharacter && AutoMudae.isLastReset()) {
                         characterName = el_Message.querySelector("span[class^='embedAuthorName']").innerText;
 
                         //# Search in a database
@@ -921,9 +924,9 @@
 
                         logger.info(`Found character [${characterName}]`);
 
-                        if (marriableUser) {
+                        if (marriageableUser) {
                             //# Should somehow detect when it's able to react
-                            setTimeout((user) => user.react(el_Message, E.EMOJI.PEOPLE_HUGGING), 5000, marriableUser);
+                            setTimeout((user) => user.react(el_Message, E.EMOJI.PEOPLE_HUGGING), 5000, marriageableUser);
                             return;
                         }
 
@@ -934,42 +937,43 @@
                     return;
                 }
 
-                //# Log obtained keys/soulmates
-
-                /// Observe kakera reactions append
+                /// Owned characters
                 if (el_Footer.innerText.includes("Pertence")) {
+                    //# Look for obtained keys
+
+                    /// Observe kakera reactions append
                     const el_MessageAccessories = el_Message.querySelector("div[id^='message-accessories']");
 
-                    if (!el_MessageAccessories) return logger.error("Couldn't observe for reactions append in this character:", el_Message);
-
-                    el_Message.kakeraCollectInterval = setInterval((el_Message) => {
-                        if (!el_Message) return;
-
-                        el_Message.retryCount ??= 1;
-                        el_Message.retryCount++;
-
-                        const el_KakeraReactionImg = el_Message.querySelector("div[class^='reactionInner'][aria-label^='kakera'][aria-label*='1 rea'] img");
-
-                        if (el_KakeraReactionImg || el_Message.retryCount >= 20) {
-                            clearInterval(el_Message.kakeraCollectInterval);
-                            delete el_Message.kakeraCollectInterval;
-                            delete el_Message.retryCount;
-                        }
-
-                        if (!el_KakeraReactionImg) return;
-
-                        const kakeraCode = el_KakeraReactionImg.alt;
-
-                        if (!AutoMudae.preferences.get(E.PREFERENCES.KAKERA)[kakeraCode]) return;
-
-                        const userWithEnoughPower = kakeraCode === E.KAKERA.PURPLE
-                            ? AutoMudae.users[0]
-                            : AutoMudae.users.find(user => user.info.get(E.MUDAE_INFO.POWER) > user.info.get(E.MUDAE_INFO.CONSUMPTION));
-
-                        if (userWithEnoughPower) {
-                            userWithEnoughPower.react(el_Message, E.EMOJI[kakeraCode]);
-                        }
-                    }, 100, el_Message);
+                    if (el_MessageAccessories){
+                        el_Message.kakeraCollectInterval = setInterval((el_Message) => {
+                            if (!el_Message) return;
+    
+                            el_Message.retryCount ??= 1;
+                            el_Message.retryCount++;
+    
+                            const el_KakeraReactionImg = el_Message.querySelector("div[class^='reactionInner'][aria-label^='kakera'][aria-label*='1 rea'] img");
+    
+                            if (el_KakeraReactionImg || el_Message.retryCount >= 20) {
+                                clearInterval(el_Message.kakeraCollectInterval);
+                                delete el_Message.kakeraCollectInterval;
+                                delete el_Message.retryCount;
+                            }
+    
+                            if (!el_KakeraReactionImg) return;
+    
+                            const kakeraCode = el_KakeraReactionImg.alt;
+    
+                            if (!AutoMudae.preferences.get(E.PREFERENCES.KAKERA)[kakeraCode]) return;
+    
+                            const userWithEnoughPower = kakeraCode === E.KAKERA.PURPLE
+                                ? AutoMudae.users[0]
+                                : AutoMudae.users.find(user => user.info.get(E.MUDAE_INFO.POWER) > user.info.get(E.MUDAE_INFO.CONSUMPTION));
+    
+                            if (userWithEnoughPower) {
+                                userWithEnoughPower.react(el_Message, E.EMOJI[kakeraCode]);
+                            }
+                        }, 100, el_Message);
+                    };                    
                 }
 
                 return;
@@ -1007,7 +1011,21 @@
             AutoMudae.cdRoll = now;
         }
 
-        //# Warn if no rolls left, can still marry and is last reset
+        if (!userWithRolls && AutoMudae.isLastReset() && AutoMudae.getMarriageableUser()){
+            const now = new Date(), h = now.getHours(), m = now.getMinutes();
+
+            const currentResetHash = `${now.toDateString()} ${m < 38 ? h-1 : h}`;
+
+            if (AutoMudae.lastResetHash !== currentResetHash){
+                AutoMudae.lastResetHash = currentResetHash;
+
+                //# Add option to auto-use $us or $rolls
+
+                logger.warn("You have no more rolls, can still marry and it's the last reset. You could use $us or $rolls, then $tu.");
+                if (AutoMudae.preferences.get(E.PREFERENCES.SOUND).lastresetnorolls) SOUND.lastResetNoRolls();
+            }
+        }
+
     };
 
     /// SessionId Hook
