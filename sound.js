@@ -18,7 +18,8 @@
 
     const SOUND = {
         marry: () => {beep(10, 400, 100, 1)},
-        cantMarry: () => {beep(15, 70, 80, 6)}
+        cantMarry: () => {beep(15, 70, 80, 6)},
+        lastResetNoRolls: () => {beep(10, 60, 250, 2)}
     };
 
     unsafeWindow.AUTOMUDAE ??= {};
