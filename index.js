@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AutoMudae_Multi
 // @namespace    nxve
-// @version      0.6.3
+// @version      0.6.4
 // @description  Automates the use of Mudae bot in Discord
 // @author       Nxve
 // @updateURL    https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/index.js
@@ -47,7 +47,8 @@
         el_MemberList: null,
         el_Chat: null,
         el_MainButton: null,
-        el_MainText: null
+        el_MainText: null,
+        el_ErrorPopup: null
     };
 
     /// CONSTS
@@ -111,7 +112,7 @@
                 if (match) return match[1];
             },
 
-            getId: (el_Message) => el_Message.id.split('-').last(),
+            getId: (el_Message) => el_Message.id.split("-").last(),
 
             isFromMudae: function (el_Message) {
                 return this.getAuthorId(el_Message) === MUDAE_USER_ID
@@ -242,7 +243,7 @@
         },
 
         mudaeTimeToMs: function (timeString) {
-            if (!timeString.includes('h')) return Number(timeString) * 60 * 1000;
+            if (!timeString.includes("h")) return Number(timeString) * 60 * 1000;
 
             const match = /(\d+h)?\s?(\d+)?/.exec(timeString);
 
@@ -291,8 +292,8 @@
                     msToStartResetHandler = nextReset - now;
                 }
 
-                this.timers.set('think', think, INTERVAL_THINK, true);
-                this.timers.set('initHourlyResetHandler', () => { handleHourlyReset(); AutoMudae.timers.set('HandleHourlyReset', handleHourlyReset, 1 * 60 * 60 * 1000, true) }, msToStartResetHandler);
+                this.timers.set("think", think, INTERVAL_THINK, true);
+                this.timers.set("initHourlyResetHandler", () => { handleHourlyReset(); AutoMudae.timers.set("HandleHourlyReset", handleHourlyReset, 1 * 60 * 60 * 1000, true) }, msToStartResetHandler);
                 this.chatObserver.observe(DOM.el_Chat, { childList: true });
                 this.setState(E.AUTOMUDAE_STATE.RUN);
                 logger.log("Running..");
@@ -310,13 +311,13 @@
         },
 
         renderMainButton: function () {
-            const el_MainButton = document.createElement('div');
+            const el_MainButton = document.createElement("div");
             el_MainButton.id = 'automudae-main-button';
 
             el_MainButton.classList.add(E.AUTOMUDAE_STATE.INJECT);
 
-            const el_MainText = document.createElement('span');
-            el_MainText.appendChild(document.createTextNode('Inject Auto-Mudae'));
+            const el_MainText = document.createElement("span");
+            el_MainText.appendChild(document.createTextNode("Inject Auto-Mudae"));
 
             el_MainButton.appendChild(el_MainText);
 
@@ -357,7 +358,7 @@
                                 <div><span>(</span><span id="automudae-field-${E.INFO_FIELD.ROLLS_LEFT}">?</span><span>/</span><span id="automudae-field-${E.INFO_FIELD.ROLLS_MAX}">?</span><span>)</span></div>
                             </div>
                             <div>
-                                ${this.users.map(user => `<div class="automudae-row"><span>${user.username}:</span><div><span>(</span><span id="automudae-field-${E.INFO_FIELD.ROLLS_LEFT}-${user.id}">?</span><span>/</span><span id="automudae-field-${E.INFO_FIELD.ROLLS_MAX}-${user.id}">?</span><span>)</span></div></div>`).join('')}
+                                ${this.users.map(user => `<div class="automudae-row"><span>${user.username}:</span><div><span>(</span><span id="automudae-field-${E.INFO_FIELD.ROLLS_LEFT}-${user.id}">?</span><span>/</span><span id="automudae-field-${E.INFO_FIELD.ROLLS_MAX}-${user.id}">?</span><span>)</span></div></div>`).join("")}
                             </div>
                         </div>
                         <div class="automudae-row-expandable">
@@ -366,7 +367,7 @@
                                 <div><span id="automudae-field-${E.INFO_FIELD.POWER}">?</span><span>%</span></div>
                             </div>
                             <div>
-                                ${this.users.map(user => `<div class="automudae-row"><span>${user.username}:</span><div><div><span id="automudae-field-${E.INFO_FIELD.POWER}-${user.id}">?</span><span>%</span></div></div></div>`).join('')}
+                                ${this.users.map(user => `<div class="automudae-row"><span>${user.username}:</span><div><div><span id="automudae-field-${E.INFO_FIELD.POWER}-${user.id}">?</span><span>%</span></div></div></div>`).join("")}
                             </div>
                         </div>
                         <div class="automudae-row-expandable">
@@ -375,7 +376,7 @@
                                 <div><span id="automudae-field-${E.INFO_FIELD.POWER_CONSUMPTION}">?</span><span>%</span></div>
                             </div>
                             <div>
-                                ${this.users.map(user => `<div class="automudae-row"><span>${user.username}:</span><div><div><span id="automudae-field-${E.INFO_FIELD.POWER_CONSUMPTION}-${user.id}">?</span><span>%</span></div></div></div>`).join('')}
+                                ${this.users.map(user => `<div class="automudae-row"><span>${user.username}:</span><div><div><span id="automudae-field-${E.INFO_FIELD.POWER_CONSUMPTION}-${user.id}">?</span><span>%</span></div></div></div>`).join("")}
                             </div>
                         </div>
                         <div class="automudae-row-expandable">
@@ -384,7 +385,7 @@
                                 <span id="automudae-field-${E.INFO_FIELD.CAN_MARRY}">?</span>
                             </div>
                             <div>
-                                ${this.users.map(user => `<div class="automudae-row"><span>${user.username}:</span><div><span id="automudae-field-${E.INFO_FIELD.CAN_MARRY}-${user.id}">?</span></div></div>`).join('')}
+                                ${this.users.map(user => `<div class="automudae-row"><span>${user.username}:</span><div><span id="automudae-field-${E.INFO_FIELD.CAN_MARRY}-${user.id}">?</span></div></div>`).join("")}
                             </div>
                         </div>
                         <div class="automudae-row-expandable">
@@ -393,7 +394,7 @@
                                 <span id="automudae-field-${E.INFO_FIELD.CAN_RT}">?</span>
                             </div>
                             <div>
-                                ${this.users.map(user => `<div class="automudae-row"><span>${user.username}:</span><div><span id="automudae-field-${E.INFO_FIELD.CAN_RT}-${user.id}">?</span></div></div>`).join('')}
+                                ${this.users.map(user => `<div class="automudae-row"><span>${user.username}:</span><div><span id="automudae-field-${E.INFO_FIELD.CAN_RT}-${user.id}">?</span></div></div>`).join("")}
                             </div>
                         </div>
                     </div>
@@ -448,13 +449,13 @@
                     <h2>Sound</h2>
                     <div class="automudae-section-body">
                         <div>
-                            <input type="checkbox" id="opt-sound-marry"><label for="opt-sound-marry"><span>When marry</span></label>
+                            <input type="checkbox" id="opt-sound-marry"><label for="opt-sound-marry"><span>Marriage</span></label>
                         </div>
                         <div>
-                            <input type="checkbox" id="opt-sound-cantmarry"><label for="opt-sound-cantmarry"><span>When can't marry</span></label>
+                            <input type="checkbox" id="opt-sound-cantmarry"><label for="opt-sound-cantmarry"><span>Can't marry</span></label>
                         </div>
                         <div>
-                            <input type="checkbox" id="opt-sound-lastresetnorolls"><label for="opt-sound-lastresetnorolls"><span>When can't roll in the last reset</span></label>
+                            <input type="checkbox" id="opt-sound-lastresetnorolls"><label for="opt-sound-lastresetnorolls"><span>Can't roll in the last reset</span></label>
                         </div>
                     </div>
                 </div>
@@ -606,12 +607,21 @@
             const err = AutoMudae.setup();
 
             if (err) {
-                //# Error in DOM
                 logger.error(err);
+                
+                const el_ErrorPopup = document.createElement("div");
+                el_ErrorPopup.id = "automudae-error";
+                el_ErrorPopup.innerHTML = `<span>${err}</span>`;
+                document.body.appendChild(el_ErrorPopup);
+
+                DOM.el_ErrorPopup = el_ErrorPopup;
+
                 return;
             }
 
             DOM.el_MainButton.onclick = null;
+
+            if (DOM.el_ErrorPopup) DOM.el_ErrorPopup = DOM.el_ErrorPopup.remove();
 
             if (this.preferences.get(E.PREFERENCES.EXTRA).logger) {
                 const doNothing = () => { };
@@ -652,7 +662,7 @@
         }
 
         if (E_INFO_FIELD === E.INFO_FIELD.COLLECTED_CHARACTERS) {
-            const el_CharacterItem = document.createElement('li');
+            const el_CharacterItem = document.createElement("li");
             el_CharacterItem.appendChild(document.createTextNode((user ? `[${user.username}]` : '') + content));
             el_OverallField.appendChild(el_CharacterItem);
 
@@ -828,7 +838,7 @@
                             updateInfoPanel(E.INFO_FIELD.POWER, newPower, user);
                         }
 
-                        el_Message.classList.add('plus');
+                        el_Message.classList.add("plus");
                         updateInfoPanel(E.INFO_FIELD.KAKERA, kakeraQuantity);
                         logger.new(`+${kakeraQuantity} kakera! [Remaining Power for user [${user.username}]: ${user.info.get(E.MUDAE_INFO.POWER)}%]`);
                         return;
@@ -849,13 +859,21 @@
 
                     if (user) {
                         user.info.set(E.MUDAE_INFO.CAN_MARRY, false);
-                        el_Message.classList.add('plus');
-
+                        
                         updateInfoPanel(E.INFO_FIELD.CAN_MARRY, "No", user);
                         updateInfoPanel(E.INFO_FIELD.COLLECTED_CHARACTERS, characterName, user);
-
+                        
                         if (AutoMudae.preferences.get(E.PREFERENCES.SOUND).marry) SOUND.marry();
                         logger.new(`User [${user.username}] got character ${characterName}!`);
+
+                        el_Message.classList.add("plus");
+
+                        document.querySelectorAll("[class^='embedAuthorName']").forEach(el_AuthorName => {
+                            if (el_AuthorName.innerText === characterName){
+                                const el_ParentMessage = el_AuthorName.closest("li");
+                                el_ParentMessage.classList.add("plus");
+                            }
+                        });
                         return;
                     }
                 }
@@ -926,7 +944,8 @@
 
                         if (marriageableUser) {
                             //# Should somehow detect when it's able to react
-                            setTimeout((user) => user.react(el_Message, E.EMOJI.PEOPLE_HUGGING), 5000, marriageableUser);
+                            if (AutoMudae.preferences.get(E.PREFERENCES.SOUND).marry) SOUND.marry();
+                            setTimeout((user) => user.react(el_Message, E.EMOJI.PEOPLE_HUGGING), 8500, marriageableUser);
                             return;
                         }
 
@@ -1043,7 +1062,7 @@
     };
 
     /// Main
-    window.addEventListener('load', main, false);
+    window.addEventListener("load", main, false);
 
     function main() {
         AutoMudae.renderMainButton();

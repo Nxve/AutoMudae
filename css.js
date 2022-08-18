@@ -28,24 +28,43 @@
     }
     `;
 
-    CSS.mainButton = `
-    #automudae-main-button {
+    CSS.mainButtonAndError = `
+    #automudae-main-button,
+    #automudae-error {
         position: absolute;
-        inset: 8px 0 auto 0;
+        inset: auto 0;
+        top: 8px;
         width: fit-content;
         margin-inline: auto;
         padding: 5px;
+        z-index: 9999;
+    }
+
+    #automudae-main-button {
         background-color: var(--button-outline-brand-background-active);
         color: var(--text-normal);
         font-weight: 500;
         transition: 200ms;
-        z-index: 9999;
     }
 
     #automudae-main-button:is(.${E.AUTOMUDAE_STATE.INJECT}, .${E.AUTOMUDAE_STATE.IDLE}, .${E.AUTOMUDAE_STATE.RUN}):hover {
         transform: scale(1.1);
         cursor: pointer;
         /* background-color: var(--button-outline-brand-background-hover); */
+    }
+
+    #automudae-error {
+        background-color: var(--button-danger-background);
+        color: white;
+        animation: popIn 150ms forwards;
+        transform: scale(0);
+    }
+
+    @keyframes popIn {
+        to {
+            top: 40px;
+            transform: scale(1);
+        }
     }
     `;
 
