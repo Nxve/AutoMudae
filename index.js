@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AutoMudae_Multi
 // @namespace    nxve
-// @version      0.6.5
+// @version      0.6.6
 // @description  Automates the use of Mudae bot in Discord
 // @author       Nxve
 // @updateURL    https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/index.js
@@ -629,10 +629,12 @@
 
             if (DOM.el_ErrorPopup) DOM.el_ErrorPopup = DOM.el_ErrorPopup.remove();
 
-            logger.debug("Required:\nArrange your $TU to expose all needed information: $ta claim rolls daily keys kakerareact kakerapower kakerainfo kakerastock rt dk rollsreset\nSet your claim feedback to default: $rc none\nSet your rolls left message to default: $rollsleft 0");
-            logger.debug("Recommendations:\nUse slash rolls.\nDon't use non-slash rolls while the channel is in peak usage by other members.");
+            const requirements = "Required:\n- Arrange your $TU to expose all needed information: $ta claim rolls daily keys kakerareact kakerapower kakerainfo kakerastock rt dk rollsreset\n- Set your claim feedback to default: $rc none\n- Set your rolls left message to default: $rollsleft 0\n- Don't scroll up the channel.";
+            const recommendations = "Recommended:\n- Use slash rolls.\n- Don't use non-slash rolls while the channel is in peak usage by other members.\n- Set your user order priorizing roll and kakera claiming.";
 
-            if (this.preferences.get(E.PREFERENCES.EXTRA).logger) {
+            const exposeLogger = this.preferences.get(E.PREFERENCES.EXTRA).logger;
+
+            if (exposeLogger) {
                 const doNothing = () => { };
 
                 for (const method in logger) {
@@ -644,11 +646,18 @@
                 console.clear();
                 window.logger = logger;
                 logger.debug("Turned off native console. Use logger instead. I recommend disabling network log, since Discord usualy prompt a lot of these.");
+                logger.debug(requirements);
+                logger.debug(recommendations);
                 logger._reprompt();
             }
 
             this.render();
             this.tryEnable();
+
+            if (!exposeLogger){
+                logger.info(requirements);
+                logger.info(recommendations);
+            }
         },
 
         getMarriageableUser: function(){
@@ -721,10 +730,7 @@
 
         logger.log("Hourly reset. Sending $tu..");
 
-        AutoMudae.users.forEach((user, i) => {
-            const msToSendTU = Math.max(1, i * (INTERVAL_SEND_MESSAGE + 50));
-            user.setTUTimer(msToSendTU);
-        });
+        AutoMudae.users.forEach(user => user.info.delete(E.MUDAE_INFO.ROLLS_LEFT));
     };
 
     function handleNewChatAppend(el_Children) {
@@ -827,7 +833,7 @@
 
             const el_Strong = el_Message.querySelector("div[id^='message-content'] span[class^='emojiContainer'] ~ strong");
 
-            /// Handle kakera collection feedback
+            /// Handle kakera claiming feedback
             if (el_Strong) {
                 const match = /^(.+)\s\+(\d+)$/.exec(el_Strong.innerText);
 
@@ -890,6 +896,8 @@
             }
 
             //# Check for wish steals
+
+            //# Check for "no more rolls" messages, to set rolls left to 0
 
             const el_ImageWrapper = el_Message.querySelector("div[class^='embedDescription'] ~ div[class^='imageContent'] div[class^='imageWrapper']");
 

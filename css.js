@@ -145,6 +145,7 @@
         display: flex;
         padding-inline: 3px;
         border-radius: 5px;
+        align-items: center;
     }
 
     .automudae-section-body > div:hover {
@@ -235,6 +236,7 @@
         padding: 2px 10px;
         color: yellow;
         border-radius: 5px;
+        pointer-events: none;
     }
     `;
 
