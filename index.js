@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AutoMudae_Multi
 // @namespace    nxve
-// @version      0.6.4
+// @version      0.6.5
 // @description  Automates the use of Mudae bot in Discord
 // @author       Nxve
 // @updateURL    https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/index.js
@@ -410,7 +410,7 @@
                 <div class="automudae-section" id="automudae-section-kakera">
                     <h2>Kakera to Collect</h2>
                     <div class="automudae-section-body">
-                        <div><input type="checkbox" id="opt-kakera-kakeraP" checked><label for="opt-kakera-kakeraP"><img class="emoji" src="https://cdn.discordapp.com/emojis/609264156347990016.webp?quality=lossless"></label></div>
+                        <div><input type="checkbox" id="opt-kakera-kakeraP"><label for="opt-kakera-kakeraP"><img class="emoji" src="https://cdn.discordapp.com/emojis/609264156347990016.webp?quality=lossless"></label></div>
                         <div><input type="checkbox" id="opt-kakera-kakera"><label for="opt-kakera-kakera"><img class="emoji" src="https://cdn.discordapp.com/emojis/469835869059153940.webp?quality=lossless"></label></div>
                         <div><input type="checkbox" id="opt-kakera-kakeraT"><label for="opt-kakera-kakeraT"><img class="emoji" src="https://cdn.discordapp.com/emojis/609264180851376132.webp?quality=lossless"></label></div>
                         <div><input type="checkbox" id="opt-kakera-kakeraG"><label for="opt-kakera-kakeraG"><img class="emoji" src="https://cdn.discordapp.com/emojis/609264166381027329.webp?quality=lossless"></label></div>
@@ -431,6 +431,9 @@
                     <h2>Roll</h2>
                     <div class="automudae-section-body">
                         <div>
+                            <input type="checkbox" id="opt-roll-enabled"><label for="opt-roll-enabled"><span>Enabled</span></label>
+                        </div>
+                        <div>
                             <select id="opt-roll-type">
                                 <option value="wx">wx</option>
                                 <option value="wa">wa</option>
@@ -449,7 +452,10 @@
                     <h2>Sound</h2>
                     <div class="automudae-section-body">
                         <div>
-                            <input type="checkbox" id="opt-sound-marry"><label for="opt-sound-marry"><span>Marriage</span></label>
+                            <input type="checkbox" id="opt-sound-foundcharacter"><label for="opt-sound-foundcharacter"><span>Found Character</span></label>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="opt-sound-marry"><label for="opt-sound-marry"><span>Marry</span></label>
                         </div>
                         <div>
                             <input type="checkbox" id="opt-sound-cantmarry"><label for="opt-sound-cantmarry"><span>Can't marry</span></label>
@@ -577,8 +583,8 @@
             const defaultPreferences = `[
                 ["${E.PREFERENCES.KAKERA}", {"kakeraP": false, "kakera": false, "kakeraT": false, "kakeraG": false, "kakeraY": false, "kakeraO": false, "kakeraR": false, "kakeraW": false, "kakeraL": false}],
                 ["${E.PREFERENCES.MENTIONS}", ""],
-                ["${E.PREFERENCES.ROLL}", {"type":"wx","slash":false}],
-                ["${E.PREFERENCES.SOUND}", {"marry":true,"cantmarry":true, "lastresetnorolls":true}],
+                ["${E.PREFERENCES.ROLL}", {"enabled":true,"type":"wx","slash":true}],
+                ["${E.PREFERENCES.SOUND}", {"foundcharacter":true,"marry":true,"cantmarry":true, "lastresetnorolls":true}],
                 ["${E.PREFERENCES.EXTRA}", {"logger":false}]
             ]`;
 
@@ -623,6 +629,9 @@
 
             if (DOM.el_ErrorPopup) DOM.el_ErrorPopup = DOM.el_ErrorPopup.remove();
 
+            logger.debug("Required:\nArrange your $TU to expose all needed information: $ta claim rolls daily keys kakerareact kakerapower kakerainfo kakerastock rt dk rollsreset\nSet your claim feedback to default: $rc none\nSet your rolls left message to default: $rollsleft 0");
+            logger.debug("Recommendations:\nUse slash rolls.\nDon't use non-slash rolls while the channel is in peak usage by other members.");
+
             if (this.preferences.get(E.PREFERENCES.EXTRA).logger) {
                 const doNothing = () => { };
 
@@ -631,6 +640,7 @@
 
                     window.console[method] = doNothing;
                 }
+
                 console.clear();
                 window.logger = logger;
                 logger.debug("Turned off native console. Use logger instead. I recommend disabling network log, since Discord usualy prompt a lot of these.");
@@ -802,7 +812,7 @@
 
                             if (!user.hasNeededInfo()) {
                                 AutoMudae.toggle();
-                                logger.error(`Couldn't retrieve needed info for user ${user.username}. Make sure your $tu configuration exposes every information.`);
+                                logger.error(`Couldn't retrieve needed info for user [${user.username}]. Make sure your $tu configuration exposes every information.\nRecommended $tuarrange: $ta claim rolls daily keys kakerareact kakerapower kakerainfo kakerastock rt dk rollsreset`);
                                 return;
                             }
 
@@ -885,7 +895,6 @@
 
             /// Handle character messages
             if (el_ImageWrapper) {
-                //# Add visual hints for messages lifetime
                 const el_Footer = el_Message.querySelector("span[class^='embedFooterText']");
 
                 const isCharacterLookupMessage = (el_Footer && (/^\d+ \/ \d+$/.test(el_Footer.innerText) || /^Pertence a .+ ~~ \d+ \/ \d+$/.test(el_Footer.innerText)));
@@ -944,7 +953,7 @@
 
                         if (marriageableUser) {
                             //# Should somehow detect when it's able to react
-                            if (AutoMudae.preferences.get(E.PREFERENCES.SOUND).marry) SOUND.marry();
+                            if (AutoMudae.preferences.get(E.PREFERENCES.SOUND).foundcharacter) SOUND.foundCharacter();
                             setTimeout((user) => user.react(el_Message, E.EMOJI.PEOPLE_HUGGING), 8500, marriageableUser);
                             return;
                         }
@@ -1025,9 +1034,11 @@
 
         const userWithRolls = AutoMudae.users.find(user => user.info.get(E.MUDAE_INFO.ROLLS_LEFT) > 0);
 
-        if (userWithRolls && now - Discord.lastMessageTime > INTERVAL_ROLL && now - AutoMudae.cdRoll > (INTERVAL_ROLL * .5)) {
-            userWithRolls.roll();
-            AutoMudae.cdRoll = now;
+        if (AutoMudae.preferences.get(E.PREFERENCES.ROLL).enabled){
+            if (userWithRolls && now - Discord.lastMessageTime > INTERVAL_ROLL && now - AutoMudae.cdRoll > (INTERVAL_ROLL * .5)) {
+                userWithRolls.roll();
+                AutoMudae.cdRoll = now;
+            }
         }
 
         if (!userWithRolls && AutoMudae.isLastReset() && AutoMudae.getMarriageableUser()){
