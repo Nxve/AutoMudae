@@ -9,13 +9,11 @@
     const CSS = {};
 
     CSS.decorators = `
-    li[id^=chat-message].plus{
+    li[id^=chat-message]:is(.plus, .critical){
         position: relative;
-        background-color: rgb(0 255 78 / 10%);
     }
 
-    li[id^=chat-message].plus::after {
-        content: '+';
+    li[id^=chat-message]:is(.plus, .critical)::after{
         position: absolute;
         bottom: 0;
         width: 22px;
@@ -23,8 +21,26 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background-color: #22441a;
+    }
+
+    li[id^=chat-message].plus{
+        background-color: hsl(138deg 100% 50% / 10%);
+    }
+
+    li[id^=chat-message].plus::after {
+        content: '+';
+        background-color: hsl(109deg 45% 18%);
         color: lime;
+    }
+
+    li[id^=chat-message].critical{
+        background-color: hsl(0deg 100% 50% / 10%);
+    }
+
+    li[id^=chat-message].critical::after {
+        content: '!';
+        background-color: hsl(0deg 45% 18%);
+        color: red;
     }
     `;
 

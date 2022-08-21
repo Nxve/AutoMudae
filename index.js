@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AutoMudae_Multi
 // @namespace    nxve
-// @version      0.6.6
+// @version      0.6.8
 // @description  Automates the use of Mudae bot in Discord
 // @author       Nxve
 // @updateURL    https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/index.js
@@ -463,6 +463,12 @@
                         <div>
                             <input type="checkbox" id="opt-sound-lastresetnorolls"><label for="opt-sound-lastresetnorolls"><span>Can't roll in the last reset</span></label>
                         </div>
+                        <div>
+                            <input type="checkbox" id="opt-sound-soulmate"><label for="opt-sound-soulmate"><span>New Soulmates</span></label>
+                        </div>
+                        <div>
+                            <input type="checkbox" id="opt-sound-wishsteal"><label for="opt-sound-wishsteal"><span>Wish Steals</span></label>
+                        </div>
                     </div>
                 </div>
                 <div class="automudae-section">
@@ -521,6 +527,7 @@
                 rollPreferences.type = this.value;
 
                 AutoMudae.preferences.set(E.PREFERENCES.ROLL, rollPreferences);
+                AutoMudae.savePreferences();
             };
 
             this.setState(E.AUTOMUDAE_STATE.SETUP);
@@ -584,7 +591,7 @@
                 ["${E.PREFERENCES.KAKERA}", {"kakeraP": false, "kakera": false, "kakeraT": false, "kakeraG": false, "kakeraY": false, "kakeraO": false, "kakeraR": false, "kakeraW": false, "kakeraL": false}],
                 ["${E.PREFERENCES.MENTIONS}", ""],
                 ["${E.PREFERENCES.ROLL}", {"enabled":true,"type":"wx","slash":true}],
-                ["${E.PREFERENCES.SOUND}", {"foundcharacter":true,"marry":true,"cantmarry":true, "lastresetnorolls":true}],
+                ["${E.PREFERENCES.SOUND}", {"foundcharacter":true,"marry":true,"cantmarry":true, "lastresetnorolls":true,"soulmate":true,"wishsteal":true}],
                 ["${E.PREFERENCES.EXTRA}", {"logger":false}]
             ]`;
 
@@ -601,7 +608,7 @@
 
         tryEnable: function () {
             if (this.state !== E.AUTOMUDAE_STATE.SETUP) return;
-            if (![...Object.values(E.DISCORD_INFO)].every(info => Discord.info.has(info))) return;
+            if (!Object.values(E.DISCORD_INFO).every(info => Discord.info.has(info))) return;
 
             this.setState(E.AUTOMUDAE_STATE.IDLE);
             DOM.el_MainButton.onclick = (_e) => AutoMudae.toggle();
@@ -831,56 +838,36 @@
 
             if (!AutoMudae.hasNeededInfo()) return;
 
-            const el_Strong = el_Message.querySelector("div[id^='message-content'] span[class^='emojiContainer'] ~ strong");
+            const el_MessageContent = el_Message.querySelector("div[id^='message-content']");
 
-            /// Handle kakera claiming feedback
-            if (el_Strong) {
-                const match = /^(.+)\s\+(\d+)$/.exec(el_Strong.innerText);
+            if (el_MessageContent){
+                const messageContent = el_MessageContent.innerText;
 
-                if (match) {
-                    const [_, messageUsername, kakeraQuantity] = match;
+                /// Handle character claims & steals
+                const characterClaimMatch = /(.+) e (.+) agora são casados!/.exec(messageContent.trim());
 
-                    const user = AutoMudae.users.find(user => user.username === messageUsername);
+                if (characterClaimMatch || messageContent.includes("(Silver IV Bônus)")){
+                    let usernameThatClaimed, characterName;
 
-                    if (user) {
-                        const kakeraType = el_Strong.previousElementSibling?.firstElementChild?.alt.replace(/:/g, '');
-
-                        const powerCost = kakeraType === E.KAKERA.PURPLE ? 0 : user.info.get(E.MUDAE_INFO.CONSUMPTION);
-
-                        if (powerCost > 0) {
-                            const newPower = user.info.get(E.MUDAE_INFO.POWER) - powerCost;
-
-                            user.info.set(E.MUDAE_INFO.POWER, newPower);
-                            updateInfoPanel(E.INFO_FIELD.POWER, newPower, user);
-                        }
-
-                        el_Message.classList.add("plus");
-                        updateInfoPanel(E.INFO_FIELD.KAKERA, kakeraQuantity);
-                        logger.new(`+${kakeraQuantity} kakera! [Remaining Power for user [${user.username}]: ${user.info.get(E.MUDAE_INFO.POWER)}%]`);
-                        return;
+                    if (characterClaimMatch){
+                        [_, usernameThatClaimed, characterName] = characterClaimMatch;
                     }
-                }
-            }
 
-            /// Handle marriage feedback
-            const messageContent = el_Message.querySelector("div[id^='message-content']")?.innerText;
+                    let user;
 
-            if (messageContent) {
-                const match = /(.+) e (.+) agora são casados!/.exec(messageContent.trim());
+                    if (usernameThatClaimed){
+                        user = AutoMudae.users.find(user => user.username === usernameThatClaimed);
+                    }
 
-                if (match) {
-                    const [_, messageUsername, characterName] = match;
-
-                    const user = AutoMudae.users.find(user => user.username === messageUsername);
-
-                    if (user) {
+                    /// Claim
+                    if (user){
                         user.info.set(E.MUDAE_INFO.CAN_MARRY, false);
                         
                         updateInfoPanel(E.INFO_FIELD.CAN_MARRY, "No", user);
                         updateInfoPanel(E.INFO_FIELD.COLLECTED_CHARACTERS, characterName, user);
                         
                         if (AutoMudae.preferences.get(E.PREFERENCES.SOUND).marry) SOUND.marry();
-                        logger.new(`User [${user.username}] got character ${characterName}!`);
+                        logger.new(`User [${usernameThatClaimed}] got character ${characterName}!`);
 
                         el_Message.classList.add("plus");
 
@@ -890,16 +877,73 @@
                                 el_ParentMessage.classList.add("plus");
                             }
                         });
+                    } else {
+                        const el_Mentions = el_Message.querySelectorAll("span.mention");
+
+                        let isIncludingMe = false;
+    
+                        for (let i = 0; i < el_Mentions.length; i++) {
+                            const mentionedNick = el_Mentions[i].innerText.substr(1);
+    
+                            if (AutoMudae.users.some(user => user.nick === mentionedNick)) {
+                                isIncludingMe = true;
+                                break;
+                            }
+                        }
+
+                        /// Steal
+                        if (isIncludingMe){
+                            if (AutoMudae.preferences.get(E.PREFERENCES.SOUND).wishsteal) SOUND.critical();
+                            el_Message.classList.add("critical");
+                        }
+                    }
+                    
+                    return;
+                }
+
+                /// Handle "no more rolls" messages
+                const noMoreRollsMatch = /(.+), os rolls são limitado/.exec(messageContent);
+
+                if (noMoreRollsMatch){
+                    const user = AutoMudae.users.find(user => user.username === noMoreRollsMatch[1]);
+
+                    return user && user.send("$tu");
+                }
+
+                const el_KakeraClaimStrong = el_Message.querySelector("div[id^='message-content'] span[class^='emojiContainer'] + strong");
+
+                /// Handle kakera claiming
+                if (el_KakeraClaimStrong) {
+                    const kakeraClaimMatch = /^(.+)\s\+(\d+)$/.exec(el_KakeraClaimStrong.innerText);
+    
+                    if (kakeraClaimMatch) {
+                        const [_, messageUsername, kakeraQuantity] = kakeraClaimMatch;
+    
+                        const user = AutoMudae.users.find(user => user.username === messageUsername);
+    
+                        if (user) {
+                            const kakeraType = el_KakeraClaimStrong.previousElementSibling?.firstElementChild?.alt.replace(/:/g, '');
+    
+                            const powerCost = kakeraType === E.KAKERA.PURPLE ? 0 : user.info.get(E.MUDAE_INFO.CONSUMPTION);
+    
+                            if (powerCost > 0) {
+                                const newPower = user.info.get(E.MUDAE_INFO.POWER) - powerCost;
+    
+                                user.info.set(E.MUDAE_INFO.POWER, newPower);
+                                updateInfoPanel(E.INFO_FIELD.POWER, newPower, user);
+                            }
+    
+                            el_Message.classList.add("plus");
+                            updateInfoPanel(E.INFO_FIELD.KAKERA, kakeraQuantity);
+                            logger.new(`+${kakeraQuantity} kakera! [Remaining Power for user [${user.username}]: ${user.info.get(E.MUDAE_INFO.POWER)}%]`);
+                        }
+    
                         return;
                     }
                 }
             }
 
-            //# Check for wish steals
-
-            //# Check for "no more rolls" messages, to set rolls left to 0
-
-            const el_ImageWrapper = el_Message.querySelector("div[class^='embedDescription'] ~ div[class^='imageContent'] div[class^='imageWrapper']");
+            const el_ImageWrapper = el_Message.querySelector("div[class^='embedDescription'] + div[class^='imageContent'] div[class^='imageWrapper']");
 
             /// Handle character messages
             if (el_ImageWrapper) {
@@ -909,6 +953,7 @@
 
                 if (isCharacterLookupMessage) return;
 
+                const characterName = el_Message.querySelector("span[class^='embedAuthorName']").innerText;
                 const el_ReplyAvatar = el_Message.querySelector("img[class^='executedCommandAvatar']");
 
                 if (el_ReplyAvatar) {
@@ -919,35 +964,37 @@
                     const user = AutoMudae.users.find(user => user.id === matchReplyUserId[1]);
 
                     if (user) {
-                        const newRollsLeft = user.info.get(E.MUDAE_INFO.ROLLS_LEFT) - 1;
-                        user.info.set(E.MUDAE_INFO.ROLLS_LEFT, newRollsLeft);
-                        updateInfoPanel(E.INFO_FIELD.ROLLS_LEFT, newRollsLeft, user);
+                        const rollsLeft = user.info.get(E.MUDAE_INFO.ROLLS_LEFT) - 1;
+                        user.info.set(E.MUDAE_INFO.ROLLS_LEFT, rollsLeft);
+                        updateInfoPanel(E.INFO_FIELD.ROLLS_LEFT, rollsLeft, user);
+
+                        if (el_Message.querySelector("div[class^='embedDescription']").innerText.includes("Sua nova ALMA")){
+                            if (AutoMudae.preferences.get(E.PREFERENCES.SOUND).soulmate) SOUND.newSoulmate();
+                            logger.new(`New soulmate: [${characterName}]!`);
+                        }
                     }
                 } else {
                     //# Remove roll count for non-slash command
-                    //# Could check for last user message, but there's no guarantee, other players could break this
+                    //- Could check for last user message, but there's no guarantee, other players could break this
                 }
 
                 if (!el_Footer || el_Footer.innerText.includes("2 ROLLS RESTANTES") && !el_Footer.innerText.includes("Pertence")) {
                     let el_InterestingCharacter;
 
-                    const el_Mentions = [...el_Message.querySelectorAll("span.mention")];
+                    const el_Mentions = el_Message.querySelectorAll("span.mention");
 
                     for (let i = 0; i < el_Mentions.length; i++) {
-                        const mentionedUser = el_Mentions[i].innerText.substr(1);
+                        const mentionedNick = el_Mentions[i].innerText.substr(1);
 
-                        if (AutoMudae.users.some(user => user.nick === mentionedUser) || AutoMudae.preferences.get(E.PREFERENCES.MENTIONS).split(",").map(nick => nick.trim()).includes(mentionedUser)) {
+                        if (AutoMudae.users.some(user => user.nick === mentionedNick) || AutoMudae.preferences.get(E.PREFERENCES.MENTIONS).split(",").map(nick => nick.trim()).includes(mentionedNick)) {
                             el_InterestingCharacter = el_Message;
                             break;
                         }
                     }
 
-                    let characterName;
                     const marriageableUser = AutoMudae.getMarriageableUser();
 
                     if (marriageableUser && !el_InterestingCharacter && AutoMudae.isLastReset()) {
-                        characterName = el_Message.querySelector("span[class^='embedAuthorName']").innerText;
-
                         //# Search in a database
                         if (characterName === "hmm") {
                             el_InterestingCharacter = el_Message;
@@ -955,18 +1002,17 @@
                     }
 
                     if (el_InterestingCharacter) {
-                        characterName ??= el_Message.querySelector("span[class^='embedAuthorName']").innerText;
-
                         logger.info(`Found character [${characterName}]`);
 
                         if (marriageableUser) {
                             //# Should somehow detect when it's able to react
+                            //- Should prevent the same user from reacting twice, for two different characters
                             if (AutoMudae.preferences.get(E.PREFERENCES.SOUND).foundcharacter) SOUND.foundCharacter();
                             setTimeout((user) => user.react(el_Message, E.EMOJI.PEOPLE_HUGGING), 8500, marriageableUser);
                             return;
                         }
 
-                        if (AutoMudae.preferences.get(E.PREFERENCES.SOUND).cantmarry) SOUND.cantMarry();
+                        if (AutoMudae.preferences.get(E.PREFERENCES.SOUND).cantmarry) SOUND.critical();
                         logger.warn(`Can't marry right now. You may lose character [${characterName}]`);
                     }
 
@@ -975,8 +1021,6 @@
 
                 /// Owned characters
                 if (el_Footer.innerText.includes("Pertence")) {
-                    //# Look for obtained keys
-
                     /// Observe kakera reactions append
                     const el_MessageAccessories = el_Message.querySelector("div[id^='message-accessories']");
 
@@ -1009,7 +1053,7 @@
                                 userWithEnoughPower.react(el_Message, E.EMOJI[kakeraCode]);
                             }
                         }, 100, el_Message);
-                    };                    
+                    };
                 }
 
                 return;
