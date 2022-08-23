@@ -138,7 +138,7 @@
         width: 100%;
         font-size: small;
         color: var(--text-normal);
-        max-height: 2rem;
+        max-height: 10rem;
         overflow-x: clip;
         overflow-y: auto;
     }
@@ -253,6 +253,54 @@
         color: yellow;
         border-radius: 5px;
         pointer-events: none;
+    }
+    `;
+
+    CSS.toasters = `
+    #automudae-toasters-wrapper {
+        position: absolute;
+        right: 0;
+        display: flex;
+        background-color: hsl(120deg 50% 20% / 10%);
+        width: 340px;
+        height: 97%;
+        z-index: 9;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .automudae-toaster {
+        background-color: white;
+        padding: 5px;
+        font-weight: 500;
+        /* border-radius: 5px; */
+        cursor: pointer;
+    }
+    
+    .automudae-toaster.info {
+        background-color: var(--button-outline-brand-border);
+    }
+    
+    .automudae-toaster.new {
+        background-color: var(--button-outline-positive-border);
+    }
+    
+    .automudae-toaster:nth-last-child(13) {
+        opacity: 0.5;
+    }
+    .automudae-toaster:nth-last-child(14) {
+        opacity: 0.4;
+    }
+    .automudae-toaster:nth-last-child(15) {
+        opacity: 0.3;
+    }
+    .automudae-toaster:nth-last-child(16) {
+        opacity: 0.2;
+    }
+    .automudae-toaster:nth-last-child(17) {
+        opacity: 0.1;
     }
     `;
 

@@ -23,6 +23,13 @@
         CAN_MARRY: 'can_marry',
         CONSUMPTION: 'kakera_consumption'
     };
+
+    E.TOASTER = {
+        INFO: 'info',
+        WARN: 'warn',
+        CRITICAL: 'critical',
+        PLUS: 'plus'
+    };
     
     E.EMOJI = {
         '💓': '%F0%9F%92%93',
