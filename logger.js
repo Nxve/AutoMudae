@@ -1,8 +1,8 @@
 (function(){
     const _logger = {
         _preffix: '%c[AUTO MUDAE]',
-        _symbols: { error: '[!]', info: '[i]', log: '[*]', new: '[+]', debug: '[!]', warn: '[!]' },
-        _color: { error: 'red', info: 'cyan', log: 'white', new: 'lime', debug: 'cyan', warn: 'gold' },
+        _symbols: { error: '[!]', info: '[i]', log: '[*]', plus: '[+]', debug: '[!]', warn: '[!]' },
+        _color: { error: 'red', info: 'cyan', log: 'white', plus: 'lime', debug: 'cyan', warn: 'gold' },
         _history: [],
         _lastMessageHash: null,
         _hash: s => s.split('').reduce((a, b) => (((a << 5) - a) + b.charCodeAt(0)) | 0, 0),
@@ -22,7 +22,7 @@
 
     const logger = {};
 
-    ['error', 'info', 'log', 'new', 'debug', 'warn'].forEach(method => {
+    ['error', 'info', 'log', 'plus', 'debug', 'warn'].forEach(method => {
         logger[method] = function () { this._print(method, ...arguments) };
     });
 
