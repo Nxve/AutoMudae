@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AutoMudae_Multi
 // @namespace    nxve
-// @version      0.6.8
+// @version      0.7.0
 // @description  Automates the use of Mudae bot in Discord
 // @author       Nxve
 // @updateURL    https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/index.js
@@ -452,7 +452,7 @@
                     <h2>Sound</h2>
                     <div class="automudae-section-body">
                         <div>
-                            <input type="checkbox" id="opt-sound-foundcharacter"><label for="opt-sound-foundcharacter"><span>Found Character</span></label>
+                            <input type="checkbox" id="opt-sound-foundcharacter"><label for="opt-sound-foundcharacter"><span>Found character</span></label>
                         </div>
                         <div>
                             <input type="checkbox" id="opt-sound-marry"><label for="opt-sound-marry"><span>Marry</span></label>
@@ -464,10 +464,10 @@
                             <input type="checkbox" id="opt-sound-lastresetnorolls"><label for="opt-sound-lastresetnorolls"><span>Can't roll in the last reset</span></label>
                         </div>
                         <div>
-                            <input type="checkbox" id="opt-sound-soulmate"><label for="opt-sound-soulmate"><span>New Soulmates</span></label>
+                            <input type="checkbox" id="opt-sound-soulmate"><label for="opt-sound-soulmate"><span>New soulmates</span></label>
                         </div>
                         <div>
-                            <input type="checkbox" id="opt-sound-wishsteal"><label for="opt-sound-wishsteal"><span>Wish Steals</span></label>
+                            <input type="checkbox" id="opt-sound-wishsteal"><label for="opt-sound-wishsteal"><span>Wish steals</span></label>
                         </div>
                     </div>
                 </div>
@@ -677,6 +677,47 @@
     window.AutoMudae = AutoMudae;
 
     /// Bot Inner Thinking
+    function observeToReact(el_Message, kakeraReactionOrUserToReact){
+        const isKakera = typeof kakeraReactionOrUserToReact === "boolean";
+        const user = isKakera ? null : kakeraReactionOrUserToReact;
+
+        let runs = 0;
+
+        const observer = setInterval(() => {
+            if (!el_Message || runs++ >= 30) return clearInterval(observer);
+
+            const el_ReactionImg = el_Message.querySelector(`div[class^='reactionInner']${isKakera ? "[aria-label^='kakera']" : ""}[aria-label*='1 rea'] img`);
+
+            if (!el_ReactionImg) return;
+            
+            clearInterval(observer);
+
+            if (!isKakera){
+                const emoji = E.EMOJI[el_ReactionImg.alt];
+
+                if (!emoji){
+                    return logger.error(`Couldn't find emoji code for [${el_ReactionImg.alt}]`);
+                }
+
+                user.react(el_Message, emoji);
+                return;
+            }
+
+            if (isKakera){
+                const kakeraCode = el_ReactionImg.alt;
+
+                if (!AutoMudae.preferences.get(E.PREFERENCES.KAKERA)[kakeraCode]) return;
+    
+                const userWithEnoughPower = kakeraCode === E.KAKERA.PURPLE
+                    ? AutoMudae.users[0]
+                    : AutoMudae.users.find(user => user.info.get(E.MUDAE_INFO.POWER) > user.info.get(E.MUDAE_INFO.CONSUMPTION));
+    
+                if (userWithEnoughPower) userWithEnoughPower.react(el_Message, E.EMOJI[kakeraCode]);                
+            }
+            
+        }, 100);
+    };
+    
     function updateInfoPanel(E_INFO_FIELD, content, user) {
         const el_OverallField = document.getElementById(`automudae-field-${E_INFO_FIELD}`);
 
@@ -894,7 +935,23 @@
                         /// Steal
                         if (isIncludingMe){
                             if (AutoMudae.preferences.get(E.PREFERENCES.SOUND).wishsteal) SOUND.critical();
+
                             el_Message.classList.add("critical");
+
+                            if (characterName){
+                                document.querySelectorAll("[class^='embedAuthorName']").forEach(el_AuthorName => {
+                                    if (el_AuthorName.innerText === characterName){
+                                        const el_ParentMessage = el_AuthorName.closest("li");
+                                        el_ParentMessage.classList.add("critical");
+                                    }
+                                });
+                            }
+                            
+                            const stealWarn = characterClaimMatch
+                            ? `User [${usernameThatClaimed}] claimed character [${characterName}] wished by you.`
+                            : "A character wished by you was claimed by another user.";
+
+                            logger.warn(stealWarn);
                         }
                     }
                     
@@ -979,7 +1036,7 @@
                 }
 
                 if (!el_Footer || el_Footer.innerText.includes("2 ROLLS RESTANTES") && !el_Footer.innerText.includes("Pertence")) {
-                    let el_InterestingCharacter;
+                    let el_InterestingCharacter, isWished;
 
                     const el_Mentions = el_Message.querySelectorAll("span.mention");
 
@@ -988,6 +1045,7 @@
 
                         if (AutoMudae.users.some(user => user.nick === mentionedNick) || AutoMudae.preferences.get(E.PREFERENCES.MENTIONS).split(",").map(nick => nick.trim()).includes(mentionedNick)) {
                             el_InterestingCharacter = el_Message;
+                            isWished = true;
                             break;
                         }
                     }
@@ -1005,10 +1063,14 @@
                         logger.info(`Found character [${characterName}]`);
 
                         if (marriageableUser) {
-                            //# Should somehow detect when it's able to react
-                            //- Should prevent the same user from reacting twice, for two different characters
                             if (AutoMudae.preferences.get(E.PREFERENCES.SOUND).foundcharacter) SOUND.foundCharacter();
-                            setTimeout((user) => user.react(el_Message, E.EMOJI.PEOPLE_HUGGING), 8500, marriageableUser);
+                            
+                            if (isWished){
+                                observeToReact(el_Message, marriageableUser);
+                            } else {
+                                setTimeout(() => marriageableUser.react(el_Message, E.EMOJI.PEOPLE_HUGGING), 8500);
+                            }
+
                             return;
                         }
 
@@ -1022,38 +1084,7 @@
                 /// Owned characters
                 if (el_Footer.innerText.includes("Pertence")) {
                     /// Observe kakera reactions append
-                    const el_MessageAccessories = el_Message.querySelector("div[id^='message-accessories']");
-
-                    if (el_MessageAccessories){
-                        el_Message.kakeraCollectInterval = setInterval((el_Message) => {
-                            if (!el_Message) return;
-    
-                            el_Message.retryCount ??= 1;
-                            el_Message.retryCount++;
-    
-                            const el_KakeraReactionImg = el_Message.querySelector("div[class^='reactionInner'][aria-label^='kakera'][aria-label*='1 rea'] img");
-    
-                            if (el_KakeraReactionImg || el_Message.retryCount >= 20) {
-                                clearInterval(el_Message.kakeraCollectInterval);
-                                delete el_Message.kakeraCollectInterval;
-                                delete el_Message.retryCount;
-                            }
-    
-                            if (!el_KakeraReactionImg) return;
-    
-                            const kakeraCode = el_KakeraReactionImg.alt;
-    
-                            if (!AutoMudae.preferences.get(E.PREFERENCES.KAKERA)[kakeraCode]) return;
-    
-                            const userWithEnoughPower = kakeraCode === E.KAKERA.PURPLE
-                                ? AutoMudae.users[0]
-                                : AutoMudae.users.find(user => user.info.get(E.MUDAE_INFO.POWER) > user.info.get(E.MUDAE_INFO.CONSUMPTION));
-    
-                            if (userWithEnoughPower) {
-                                userWithEnoughPower.react(el_Message, E.EMOJI[kakeraCode]);
-                            }
-                        }, 100, el_Message);
-                    };
+                    observeToReact(el_Message, true);
                 }
 
                 return;
