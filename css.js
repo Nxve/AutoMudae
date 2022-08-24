@@ -244,7 +244,7 @@
     }
     
     [data-requirerestart]:hover::before {
-        content: '* Require restart to work!';
+        content: '* Require restart to apply changes!';
         position: absolute;
         bottom: 20px;
         background-color: var(--background-tertiary);
