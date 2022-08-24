@@ -28,7 +28,9 @@
         INFO: 'info',
         WARN: 'warn',
         CRITICAL: 'critical',
-        PLUS: 'plus'
+        KAKERA: 'kakera',
+        CHARCLAIM: 'charclaim',
+        SOULMATE: 'soulmate'
     };
     
     E.EMOJI = {
