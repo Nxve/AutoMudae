@@ -24,7 +24,7 @@
         CONSUMPTION: 'kakera_consumption'
     };
 
-    E.TOASTER = {
+    E.TOAST = {
         INFO: 'info',
         WARN: 'warn',
         CRITICAL: 'critical',
