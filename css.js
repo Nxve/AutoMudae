@@ -307,6 +307,14 @@
         background-color: var(--status-danger);
     }
 
+    .automudae-toast.link {
+        cursor: alias;
+    }
+    
+    .automudae-toast.missing {
+        animation: wobble-hor-bottom 0.8s both;
+    }
+
     .automudae-toast:hover::before {
         --width: 18px;
         --height: 100;
@@ -341,6 +349,9 @@
     .automudae-toast:nth-last-child(17) {
         opacity: 0.1;
     }
+    .automudae-toast:nth-last-child(n+18) {
+        opacity: 0;
+    }
 
     @keyframes flipHorz {
         0% {
@@ -363,7 +374,29 @@
           filter: blur(0);
         }
     }
-      
+
+    @keyframes wobble-hor-bottom {
+        0%,
+        100% {
+            transform: translateX(0%);
+            transform-origin: 50% 50%;
+        }
+        15% {
+            transform: translateX(-30px) rotate(-6deg);
+        }
+        30% {
+            transform: translateX(15px) rotate(6deg);
+        }
+        45% {
+            transform: translateX(-15px) rotate(-3.6deg);
+        }
+        60% {
+            transform: translateX(9px) rotate(2.4deg);
+        }
+        75% {
+            transform: translateX(-6px) rotate(-1.2deg);
+        }
+      }
     `;
 
     unsafeWindow.AUTOMUDAE ??= {};
