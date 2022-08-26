@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         AutoMudae_Multi
 // @namespace    nxve
-// @version      0.7.4
+// @version      0.7.6
 // @description  Automates the use of Mudae bot in Discord
 // @author       Nxve
-// @updateURL    https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/index.js
-// @downloadURL  https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/index.js
+// @updateURL    https://raw.githubusercontent.com/Nxve/AutoMudae/main/index.js
+// @downloadURL  https://raw.githubusercontent.com/Nxve/AutoMudae/main/index.js
 // @supportURL   https://github.com/Nxve/AutoMudae/issues
 // @match        https://discord.com/channels/*
 // @exclude      https://discord.com/channels/@me
@@ -15,10 +15,10 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_info
-// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/logger.js
-// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/enum.js
-// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/css.js
-// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/sound.js
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/logger.js
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/enum.js
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/css.js
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/sound.js
 // ==/UserScript==
 
 (function () {
@@ -58,7 +58,7 @@
     const DEBUG = false;
     const LOOKUP_MESSAGE_COUNT = 100;
     const INTERVAL_SEND_MESSAGE = 1500;
-    const INTERVAL_ROLL = 2500;
+    const INTERVAL_ROLL = 2000;
     const INTERVAL_THINK = 200;
     const MUDAE_USER_ID = '432610292342587392';
     const SLASH_COMMANDS = {
@@ -101,7 +101,7 @@
 
                     el_TargetMessage = el_TargetMessage.previousElementSibling;
 
-                    while (el_TargetMessage !== undefined && el_TargetMessage.tagName !== "LI") {
+                    while (el_TargetMessage && el_TargetMessage.tagName !== "LI") {
                         el_TargetMessage = el_TargetMessage.previousElementSibling;
                     }
 
@@ -244,7 +244,32 @@
                 el_Toast.classList.add("automudae-toast", E_TOAST);
                 el_Toast.innerHTML = `<span>${text}</span>`;
 
-                //# 
+                if (el_SubjectMessage){
+                    el_Toast.classList.add("link");
+
+                    el_Toast.onclick = function(){
+                        if (this.classList.contains("missing")){
+                            this.classList.remove("missing");
+                            void this.offsetWidth;
+                            this.classList.add("missing");  
+                            return;
+                        }
+
+                        if (!el_SubjectMessage) return this.classList.add("missing");;
+
+                        const loadedMessages = [...el_SubjectMessage.parentElement.children];
+                        const messageIndex = loadedMessages.indexOf(el_SubjectMessage);
+                        const distanceFromBottom = loadedMessages.length - messageIndex;
+                        const quantityMargin = 19;
+
+                        if (messageIndex >= quantityMargin && distanceFromBottom <= quantityMargin){
+                            el_SubjectMessage.scrollIntoView();
+                            return;
+                        }
+
+                        this.classList.add("missing");
+                    };
+                }
 
                 DOM.el_ToastsWrapper.appendChild(el_Toast);
             },
@@ -701,6 +726,7 @@
 
         think() {
             const now = performance.now();
+            const dateNow = new Date(), h = dateNow.getHours(), m = dateNow.getMinutes();
 
             if (!AutoMudae.hasNeededInfo()) {
                 if (now - AutoMudae.cdGatherInfo < 1000) return;
@@ -731,10 +757,8 @@
                 }
             }
 
-            if (!userWithRolls && AutoMudae.isLastReset() && AutoMudae.getMarriageableUser()) {
-                const now = new Date(), h = now.getHours(), m = now.getMinutes();
-
-                const currentResetHash = `${now.toDateString()} ${m < 38 ? h - 1 : h}`;
+            if (!userWithRolls && m > 38 && AutoMudae.isLastReset() && AutoMudae.getMarriageableUser()) {
+                const currentResetHash = `${dateNow.toDateString()} ${h}`;
 
                 if (AutoMudae.lastResetHash !== currentResetHash) {
                     AutoMudae.lastResetHash = currentResetHash;
@@ -747,6 +771,7 @@
                     AutoMudae.toasts.add(E.TOAST.WARN, warnMessage);
                     if (AutoMudae.preferences.get(E.PREFERENCES.SOUND).lastresetnorolls) SOUND.lastResetNoRolls();
                 }
+                
             }
 
         },
@@ -811,11 +836,11 @@
         },
 
         handleHourlyReset() {
-            if (!this.hasNeededInfo()) return;
+            if (!AutoMudae.hasNeededInfo()) return;
 
             logger.log("Hourly reset. Gathering updated status..");
 
-            this.users.forEach(user => user.info.delete(E.MUDAE_INFO.ROLLS_LEFT));
+            AutoMudae.users.forEach(user => user.info.delete(E.MUDAE_INFO.ROLLS_LEFT));
         }
     };
 
@@ -1146,6 +1171,7 @@
                         }
                     }
 
+                    //# If isWished, should consider claiming with mentioned users, to get bonus kakera from Emerald IV
                     const marriageableUser = AutoMudae.getMarriageableUser();
 
                     if (marriageableUser && !el_InterestingCharacter && AutoMudae.isLastReset()) {
