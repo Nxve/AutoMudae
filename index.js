@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         AutoMudae_Multi
 // @namespace    nxve
-// @version      0.7.6
+// @version      0.7.7
 // @description  Automates the use of Mudae bot in Discord
 // @author       Nxve
-// @updateURL    https://raw.githubusercontent.com/Nxve/AutoMudae/main/index.js
-// @downloadURL  https://raw.githubusercontent.com/Nxve/AutoMudae/main/index.js
+// @updateURL    https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/index.js
+// @downloadURL  https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/index.js
 // @supportURL   https://github.com/Nxve/AutoMudae/issues
 // @match        https://discord.com/channels/*
 // @exclude      https://discord.com/channels/@me
@@ -15,10 +15,10 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_info
-// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/logger.js
-// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/enum.js
-// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/css.js
-// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/sound.js
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/logger.js
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/enum.js
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/css.js
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/sound.js
 // ==/UserScript==
 
 (function () {
@@ -37,10 +37,9 @@
 
     GM_addStyle(CSS);
 
-    /// Forbidden Act, don't do this at home
-    //# Refactor this
-    Array.prototype.pickRandom = function () { return this[this.length * Math.random() | 0] };
-    Array.prototype.last = function () { return this[this.length - 1] };
+    /// Utils
+    const pickRandomFromArray = (arr) => arr[arr.length * Math.random() | 0];
+    const getLastFromArray = (arr) => arr[arr.length - 1];
 
     /// DOM Elements
     const DOM = {
@@ -55,7 +54,6 @@
     };
 
     /// CONSTS
-    const DEBUG = false;
     const LOOKUP_MESSAGE_COUNT = 100;
     const INTERVAL_SEND_MESSAGE = 1500;
     const INTERVAL_ROLL = 2000;
@@ -113,7 +111,7 @@
                 if (match) return match[1];
             },
 
-            getId: (el_Message) => el_Message.id.split("-").last(),
+            getId: (el_Message) => getLastFromArray(el_Message.id.split("-")),
 
             isFromMudae: function (el_Message) {
                 return this.getAuthorId(el_Message) === MUDAE_USER_ID
@@ -197,10 +195,6 @@
         roll() {
             const rollPreferences = AutoMudae.preferences.get(E.PREFERENCES.ROLL);
 
-            if (!rollPreferences.slash) {
-                return this.send(`$${rollPreferences.type}`);
-            }
-
             const command = SLASH_COMMANDS[rollPreferences.type];
 
             fetch("https://discord.com/api/v9/interactions", {
@@ -229,7 +223,6 @@
                 if (this._t.has(identifier)) clearTimeout(identifier);
                 const timer = isInterval ? setInterval(callback, ms) : setTimeout(callback, ms);
                 this._t.set(identifier, timer);
-                if (DEBUG) logger.debug(`Added timer [${identifier}][${ms}]`);
             },
             clear() { [...this._t.values()].forEach(t => { clearTimeout(t); clearInterval(t) }); this._t.clear(); }
         },
@@ -306,8 +299,40 @@
             return totalMs;
         },
 
-        getMarriageableUser() {
-            return this.users.find(user => user.info.get(E.MUDAE_INFO.CAN_MARRY));
+        getMarriageableUser(preferableNicknames) {
+            if (!preferableNicknames || preferableNicknames.length === 0){
+                return this.users.find(user => user.info.get(E.MUDAE_INFO.CAN_MARRY));
+            }
+
+            let marriageableUser;
+
+            for (let i = 0; i < this.users.length; i++) {
+                const user = this.users[i];
+                
+                if (user.info.get(E.MUDAE_INFO.CAN_MARRY)){
+                    marriageableUser = user;
+
+                    if (preferableNicknames.includes(user.nick)) break;                    
+                }
+            }
+
+            return marriageableUser;
+        },
+
+        clearError(){
+            if (DOM.el_ErrorPopup) DOM.el_ErrorPopup = DOM.el_ErrorPopup.remove();
+        },
+
+        error(msg) {
+            this.clearError();
+            if (!msg) return;
+
+            const el_ErrorPopup = document.createElement("div");
+            el_ErrorPopup.id = "automudae-error";
+            el_ErrorPopup.innerHTML = `<span>${msg}</span>`;
+            document.body.appendChild(el_ErrorPopup);
+
+            DOM.el_ErrorPopup = el_ErrorPopup;
         },
 
         /// Workflow
@@ -336,22 +361,15 @@
 
             if (err) {
                 logger.error(err);
-
-                const el_ErrorPopup = document.createElement("div");
-                el_ErrorPopup.id = "automudae-error";
-                el_ErrorPopup.innerHTML = `<span>${err}</span>`;
-                document.body.appendChild(el_ErrorPopup);
-
-                DOM.el_ErrorPopup = el_ErrorPopup;
-
+                this.error(err);
                 return;
             }
 
             DOM.el_MainButton.onclick = null;
 
-            if (DOM.el_ErrorPopup) DOM.el_ErrorPopup = DOM.el_ErrorPopup.remove();
+            this.clearError();
 
-            const requirements = "Required:\n- Arrange your $TU to expose all needed information: $ta claim rolls daily keys kakerareact kakerapower kakerainfo kakerastock rt dk rollsreset\n- Set your claim feedback to default: $rc none\n- Set your rolls left message to default: $rollsleft 0\n- Don't scroll up the channel.";
+            const requirements = "Required:\n- Arrange your $TU to expose all needed information: $ta claim rolls daily keys kakerareact kakerapower kakerainfo kakerastock rt dk rollsreset\n- Set your claim feedback to default: $rc none\n- Set your rolls left message to default: $rollsleft 0\nCan only roll with slash commands.\nDon't search for messages in Discord.\n- Don't scroll up the channel.";
             const recommendations = "Recommended:\n- Use slash rolls.\n- Don't use non-slash rolls while the channel is in peak usage by other members.\n- Set your user order priorizing roll and kakera claiming.";
 
             const exposeLogger = this.preferences.get(E.PREFERENCES.EXTRA).logger;
@@ -440,7 +458,7 @@
             const defaultPreferences = `[
                 ["${E.PREFERENCES.KAKERA}", {"kakeraP": false, "kakera": false, "kakeraT": false, "kakeraG": false, "kakeraY": false, "kakeraO": false, "kakeraR": false, "kakeraW": false, "kakeraL": false}],
                 ["${E.PREFERENCES.MENTIONS}", ""],
-                ["${E.PREFERENCES.ROLL}", {"enabled":true,"type":"wx","slash":true}],
+                ["${E.PREFERENCES.ROLL}", {"enabled":true,"type":"wx"}],
                 ["${E.PREFERENCES.SOUND}", {"foundcharacter":true,"marry":true,"cantmarry":true, "lastresetnorolls":true,"soulmate":true,"wishsteal":true}],
                 ["${E.PREFERENCES.EXTRA}", {"logger":true}]
             ]`;
@@ -570,9 +588,6 @@
                                 <option value="hg">hg</option>
                             </select>
                         </div>
-                        <div>
-                            <input type="checkbox" id="opt-roll-slash"><label for="opt-roll-slash"><span>Use slash command</span></label>
-                        </div>
                     </div>
                 </div>
                 <div class="automudae-section">
@@ -679,6 +694,8 @@
 
         toggle() {
             if (this.state === E.AUTOMUDAE_STATE.IDLE) {
+                this.clearError();
+
                 let msToStartResetHandler = 1;
                 const now = new Date();
 
@@ -811,7 +828,7 @@
             }
 
             if (E_INFO_FIELD === E.INFO_FIELD.POWER) {
-                const highestPower = [...document.querySelectorAll(`[id^='automudae-field-${E_INFO_FIELD}-']`)].map(el_UserField => el_UserField.innerText).filter(text => /\d+/.test(text)).sort((a, b) => Number(a) - Number(b)).last();
+                const highestPower = getLastFromArray([...document.querySelectorAll(`[id^='automudae-field-${E_INFO_FIELD}-']`)].map(el_UserField => el_UserField.innerText).filter(text => /\d+/.test(text)).sort((a, b) => Number(a) - Number(b)));
 
                 if (highestPower) el_OverallField.innerText = `↓ ${highestPower}`;
 
@@ -978,8 +995,10 @@
 
                             if (!user.hasNeededInfo()) {
                                 AutoMudae.toggle();
-                                //# Use DOM.el_ErrorPopup
-                                logger.error(`Couldn't retrieve needed info for user [${user.username}]. Make sure your $tu configuration exposes every information.`);
+
+                                const errMsg = `Couldn't retrieve needed info for user [${user.username}]. Make sure your $tu configuration exposes every information.`;
+                                logger.error(errMsg);
+                                AutoMudae.error(errMsg);
                                 return;
                             }
 
@@ -1151,18 +1170,15 @@
                             AutoMudae.toasts.add(E.TOAST.SOULMATE, logMessage, el_Message);
                         }
                     }
-                } else {
-                    //# Remove roll count for non-slash command
-                    //- Could check for last user message, but there's no guarantee, other players could break this
                 }
 
                 if (!el_Footer || el_Footer.innerText.includes("2 ROLLS RESTANTES") && !el_Footer.innerText.includes("Pertence")) {
                     let el_InterestingCharacter, isWished;
 
-                    const el_Mentions = el_Message.querySelectorAll("span.mention");
+                    const mentionedNicknames = [...el_Message.querySelectorAll("span.mention")].map(el_Mention => el_Mention.innerText.substr(1));
 
-                    for (let i = 0; i < el_Mentions.length; i++) {
-                        const mentionedNick = el_Mentions[i].innerText.substr(1);
+                    for (let i = 0; i < mentionedNicknames.length; i++) {
+                        const mentionedNick = mentionedNicknames[i];
 
                         if (AutoMudae.users.some(user => user.nick === mentionedNick) || AutoMudae.preferences.get(E.PREFERENCES.MENTIONS).split(",").map(nick => nick.trim()).includes(mentionedNick)) {
                             el_InterestingCharacter = el_Message;
@@ -1171,8 +1187,7 @@
                         }
                     }
 
-                    //# If isWished, should consider claiming with mentioned users, to get bonus kakera from Emerald IV
-                    const marriageableUser = AutoMudae.getMarriageableUser();
+                    const marriageableUser = AutoMudae.getMarriageableUser(mentionedNicknames);
 
                     if (marriageableUser && !el_InterestingCharacter && AutoMudae.isLastReset()) {
                         //# Search in a database
