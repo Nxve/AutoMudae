@@ -154,6 +154,7 @@
                     this.nick = nick;
                 })
                 .catch(err => logger.error(`Couldn't retrieve the nick for user [${username}]`, err));
+                //# Toggle run, bc this user isn't in said guild
         }
 
         hasNeededInfo() {
