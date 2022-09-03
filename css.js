@@ -44,8 +44,57 @@
     }
     `;
 
-    CSS.mainButtonAndError = `
-    #automudae-main-wrapper,
+    CSS.general = `
+    .automudae-hide, .automudae-hide *, .automudae-hide::before, .automudae-hide::after {
+        display: none !important;
+    }
+    `;
+
+    CSS.stateText = `
+    #automudae-state {
+        display: flex;
+        gap: 10px;
+        margin-right: 10px;
+        color: var(--text-normal);
+    }
+    `;
+
+    CSS.runButton = `
+    #automudae-run-button {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 1px 5px;
+        margin-right: 20px;
+        background-color: var(--button-outline-brand-background-active);
+        cursor: pointer;
+        transition: 200ms;
+    }
+    
+    #automudae-run-button:hover {
+        background-color: var(--button-outline-brand-background-hover);
+        transform: scale(1.1);
+    }
+    
+    #automudae-run-button::before {
+        content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='15' fill='%23DCDDDE' viewBox='0 0 16 12'%3E%3Cpath d='m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z'/%3E%3C/svg%3E");
+    }
+    
+    #automudae-run-button.running::before {
+        content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23DCDDDE' viewBox='0 0 16 12'%3E%3Cpath d='M5.5 3.5A1.5 1.5 0 0 1 7 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5zm5 0A1.5 1.5 0 0 1 12 5v6a1.5 1.5 0 0 1-3 0V5a1.5 1.5 0 0 1 1.5-1.5z'/%3E%3C/svg%3E");
+    }
+    
+    #automudae-run-button::after {
+        content: "Run";
+    }
+    
+    #automudae-run-button.running::after {
+        content: "Pause";
+    }
+    `;
+
+    CSS.injectionsAndError = `
+    #automudae-injections-wrapper,
     #automudae-error {
         position: absolute;
         inset: auto 0;
@@ -56,25 +105,24 @@
         z-index: 9999;
     }
 
-    #automudae-main-wrapper {
+    #automudae-injections-wrapper {
         display: flex;
         gap: 10px;
         padding: 0;
     }
 
-    #automudae-main-wrapper > div {
+    #automudae-injections-wrapper > div {
         padding: 5px;
         background-color: var(--button-outline-brand-background-active);
         color: var(--text-normal);
         font-weight: 500;
+        cursor: pointer;
         transition: 200ms;
     }
 
-    #automudae-use-tokenlist-button:hover,
-    #automudae-main-button:is(.${E.AUTOMUDAE_STATE.INJECT}, .${E.AUTOMUDAE_STATE.IDLE}, .${E.AUTOMUDAE_STATE.RUN}):hover {
-        transform: scale(1.1);
-        cursor: pointer;
+    #automudae-injections-wrapper > div:hover {
         background-color: var(--button-outline-brand-background-hover);
+        transform: scale(1.1);
     }
 
     #automudae-error {
@@ -408,6 +456,14 @@
     `;
 
     CSS.tokenList = `
+    ::-webkit-scrollbar {
+        width: 2px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.8);
+    }
+
     #automudae-tokenlist-wrapper {
         position: absolute;
         width: 100%;
@@ -462,6 +518,7 @@
         display: flex;
         flex-direction: column;
         gap: 5px;
+        overflow-y: overlay;
     }
 
     #automudae-tokenlist-accept:hover {
