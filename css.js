@@ -45,7 +45,7 @@
     `;
 
     CSS.mainButtonAndError = `
-    #automudae-main-button,
+    #automudae-main-wrapper,
     #automudae-error {
         position: absolute;
         inset: auto 0;
@@ -56,17 +56,25 @@
         z-index: 9999;
     }
 
-    #automudae-main-button {
+    #automudae-main-wrapper {
+        display: flex;
+        gap: 10px;
+        padding: 0;
+    }
+
+    #automudae-main-wrapper > div {
+        padding: 5px;
         background-color: var(--button-outline-brand-background-active);
         color: var(--text-normal);
         font-weight: 500;
         transition: 200ms;
     }
 
+    #automudae-use-tokenlist-button:hover,
     #automudae-main-button:is(.${E.AUTOMUDAE_STATE.INJECT}, .${E.AUTOMUDAE_STATE.IDLE}, .${E.AUTOMUDAE_STATE.RUN}):hover {
         transform: scale(1.1);
         cursor: pointer;
-        /* background-color: var(--button-outline-brand-background-hover); */
+        background-color: var(--button-outline-brand-background-hover);
     }
 
     #automudae-error {
@@ -397,6 +405,103 @@
             transform: translateX(-6px) rotate(-1.2deg);
         }
       }
+    `;
+
+    CSS.tokenList = `
+    #automudae-tokenlist-wrapper {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #automudae-tokenlist {
+        background-color: var(--background-tertiary);
+        width: 400px;
+        height: 80vh;
+        display: flex;
+        flex-direction: column;
+        font-weight: 400;
+        color: white;
+        justify-content: space-between;
+        align-items: center;
+        padding: 5px;
+    }
+
+    #automudae-tokenlist-accept {
+        width: 100%;
+        text-align: center;
+        padding-block: 5px;
+        background-color: var(--status-positive-background);
+        transition: 200ms;
+        cursor: pointer;
+    }
+
+    #automudae-tokenlist h3 {
+        font-size: x-large;
+        position: relative;
+    }
+
+    #automudae-tokenlist h3::after {
+        content: '';
+        position: absolute;
+        left: 0px;
+        bottom: -4px;
+        height: 2px;
+        width: 100%;
+        background-color: var(--background-modifier-accent);
+    }
+
+    #automudae-tokenlist ul {
+        width: 400px;
+        height: 60vh;
+        background-color: var(--background-floating);
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    #automudae-tokenlist-accept:hover {
+        background-color: var(--status-positive);
+    }
+
+    #automudae-tokenlist-controls {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-end;
+        gap: 1rem;
+        padding-right: 10px;
+    }
+
+    #automudae-tokenlist-controls > div {
+        padding: 3px;
+        font-size: small;
+        cursor: pointer;
+        transition: 200ms;
+    }
+
+    #automudae-tokenlist-controls > div:hover {
+        background-color: white;
+        color: black;
+    }
+
+    #automudae-tokenlist input {
+        width: 99%;
+        border: none;
+        background: none;
+        color: var(--text-normal);
+    }
+
+    #automudae-tokenlist li:nth-child(odd) {
+        background-color: var(--background-accent);
+    }
+
+    #automudae-tokenlist li:nth-child(even) {
+        background-color: var(--background-modifier-selected);
+    }
     `;
 
     unsafeWindow.AUTOMUDAE ??= {};
