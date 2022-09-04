@@ -69,7 +69,8 @@
 
     E.GMVALUE = {
         PREFERENCES: 'preferences',
-        VERSION: 'version'
+        VERSION: 'version',
+        TOKENLIST: 'tokenlist'
     };
 
     E.PREFERENCES = {

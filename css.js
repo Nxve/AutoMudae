@@ -45,6 +45,14 @@
     `;
 
     CSS.general = `
+    ::-webkit-scrollbar {
+        width: 2px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.8);
+    }
+
     .automudae-hide, .automudae-hide *, .automudae-hide::before, .automudae-hide::after {
         display: none !important;
     }
@@ -456,14 +464,6 @@
     `;
 
     CSS.tokenList = `
-    ::-webkit-scrollbar {
-        width: 2px;
-    }
-    
-    ::-webkit-scrollbar-thumb {
-            background-color: rgba(0, 0, 0, 0.8);
-    }
-
     #automudae-tokenlist-wrapper {
         position: absolute;
         width: 100%;
@@ -558,6 +558,23 @@
 
     #automudae-tokenlist li:nth-child(even) {
         background-color: var(--background-modifier-selected);
+    }
+
+    #automudae-tokenlist li {
+        position: relative;
+    }
+    
+    #automudae-tokenlist li:hover:not(:focus-within) input {
+        opacity: .1;
+    }
+    
+    #automudae-tokenlist li:hover:not(:focus-within)::before {
+        content: attr(data-username);
+        position: absolute;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        margin-left: 5px;
     }
     `;
 

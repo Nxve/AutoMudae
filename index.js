@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AutoMudae_Multi
 // @namespace    nxve
-// @version      0.7.7
+// @version      0.8.0
 // @description  Automates the use of Mudae bot in Discord
 // @author       Nxve
 // @updateURL    https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/index.js
@@ -47,9 +47,10 @@
         el_MemberList: null,
         el_Chat: null,
         el_ChatWrapper: null,
+        el_InjectionsWrapper: null,
+        el_RunButton: null,
+        el_StateSpan: null,
         el_ToastsWrapper: null,
-        el_MainButton: null,
-        el_MainText: null,
         el_ErrorPopup: null
     };
 
@@ -103,7 +104,7 @@
                         el_TargetMessage = el_TargetMessage.previousElementSibling;
                     }
 
-                    if (!el_Avatar && !el_TargetMessage) return logger.error("Couldn't get authorId for this Discord message:", el_Message);
+                    if (!el_Avatar && !el_TargetMessage) return logger.error("Couldn't get avatar for this Discord message:", el_Message);
                 }
 
                 const match = /avatars\/(\d+)\//.exec(el_Avatar.src);
@@ -134,27 +135,55 @@
         info
         sendTUTimer
 
-        constructor(id, username, avatar, token) {
-            this.id = id;
-            this.username = username;
-            this.avatar = avatar;
+        constructor(token, id, username, avatar) {
             this.token = token;
             this.info = new Map();
 
-            const guildId = window.location.pathname.split("/")[2];
-
-            fetch(`https://discord.com/api/v9/users/${id}/profile?guild_id=${guildId}`, {
-                "headers": {
-                    "authorization": token
+            return new Promise(async (resolve) => {
+                if (id){
+                    this.id = id;
+                    this.username = username;
+                    this.avatar = avatar;
+    
+                    await this.fetchNick();
+                    return resolve(this);
                 }
-            })
+
+                fetch("https://discord.com/api/v9/users/@me", {
+                    "headers": {
+                        "authorization": token
+                    }
+                })
+                .then(response => response.json())
+                .then(async (data) => {
+                    this.id = data.id;
+                    this.username = data.username;
+                    this.avatar = data.avatar;
+
+                    await this.fetchNick();
+                })
+                .catch(err => logger.error(`Couldn't retrieve info for some user.`, err))
+                .finally(() => resolve(this));
+            });
+        }
+
+        async fetchNick(){
+            return new Promise(resolve => {
+                const guildId = window.location.pathname.split("/")[2];
+
+                fetch(`https://discord.com/api/v9/users/${this.id}/profile?guild_id=${guildId}`, {
+                    "headers": {
+                        "authorization": this.token
+                    }
+                })
                 .then(response => response.json())
                 .then(data => {
                     const { guild_member: { nick } } = data;
                     this.nick = nick;
                 })
-                .catch(err => logger.error(`Couldn't retrieve the nick for user [${username}]`, err));
-                //# Toggle run, bc this user isn't in said guild
+                .catch(err => logger.error(`Couldn't retrieve the nick for user [${this.username}]`, err))
+                .finally(() => resolve());
+            });
         }
 
         hasNeededInfo() {
@@ -337,142 +366,251 @@
         },
 
         /// Workflow
-        renderMainButton() {
-            const el_MainButton = document.createElement("div");
-            el_MainButton.id = 'automudae-main-button';
+        renderTokenList(){
+            const isTokenValid = token => token && token.length >= 70 && token.length < 80 && /\w+\.\w+\.[-\w]+$/.test(token);
 
-            el_MainButton.classList.add(E.AUTOMUDAE_STATE.INJECT);
+            function handleTokenInput(){
+                if (!isTokenValid(this.value)) this.parentElement.remove();                
+            }
 
-            const el_MainText = document.createElement("span");
-            el_MainText.appendChild(document.createTextNode("Inject Auto-Mudae"));
+            const el_TokenListWrapper = document.createElement("div");
+            el_TokenListWrapper.id = "automudae-tokenlist-wrapper";
+            el_TokenListWrapper.innerHTML = `<div id="automudae-tokenlist"><h3>Token List</h3><div><ul></ul><div id="automudae-tokenlist-controls"><div id="automudae-tokenlist-add">Add</div><div id="automudae-tokenlist-clear">Clear</div></div></div><div id="automudae-tokenlist-accept">Accept</div></div>`;
+            
+            document.body.appendChild(el_TokenListWrapper);
 
-            el_MainButton.appendChild(el_MainText);
+            const el_TokenList = document.querySelector("#automudae-tokenlist ul");
 
-            el_MainButton.onclick = (_e) => AutoMudae.inject();
+            document.getElementById("automudae-tokenlist-clear").onclick = () => el_TokenList.innerHTML = "";
 
-            DOM.el_MainButton = el_MainButton;
-            DOM.el_MainText = el_MainText;
+            document.getElementById("automudae-tokenlist-add").onclick = () => {
+                if (el_TokenList.childElementCount >= 20) return;
 
-            document.body.appendChild(el_MainButton);
+                const el_TokenInput = document.createElement("input");
+
+                el_TokenInput.onblur = handleTokenInput;
+
+                el_TokenList.appendChild(document.createElement("li").appendChild(el_TokenInput).parentElement);
+            };
+
+            document.getElementById("automudae-tokenlist-accept").onclick = () => {
+                const tokenSet = new Set();
+
+                document.querySelectorAll("#automudae-tokenlist input").forEach(el_Input => {
+                    const token = el_Input.value;
+                    if (isTokenValid(token)) tokenSet.add(token);
+                });
+
+                if (tokenSet.size === 0){
+                    AutoMudae.error("Please provide a valid token.");
+                    return;
+                }
+
+                const tokenList = [...tokenSet];
+
+                GM_setValue(E.GMVALUE.TOKENLIST, tokenList.join(";"));
+
+                el_TokenListWrapper.remove();
+                AutoMudae.inject(tokenList);
+            };
+
+            GM_getValue(E.GMVALUE.TOKENLIST)?.split(";").forEach(token => {
+                const el_TokenInput = document.createElement("input");
+                el_TokenInput.value = token;
+                //# Add data-username to each li
+                el_TokenList.appendChild(document.createElement("li").appendChild(el_TokenInput).parentElement);
+            });
         },
 
-        inject() {
-            logger.info("Injecting...");
-            const err = AutoMudae.setup();
-
-            if (err) {
-                logger.error(err);
-                this.error(err);
+        toggleInjectionButtons(){
+            if (DOM.el_InjectionsWrapper){
+                DOM.el_InjectionsWrapper.classList.toggle("automudae-hide");
                 return;
             }
 
-            DOM.el_MainButton.onclick = null;
+            const el_LoggedUsersButton = document.createElement("div");
+            el_LoggedUsersButton.id = "automudae-use-logged-button";
+            el_LoggedUsersButton.innerHTML = "<span>Use Logged Users</span>";
 
-            this.clearError();
+            const el_TokenListButton = document.createElement("div");
+            el_TokenListButton.id = "automudae-use-tokenlist-button";
+            el_TokenListButton.innerHTML = "<span>Use Token List</span>";
 
-            const requirements = "Required:\n- Arrange your $TU to expose all needed information: $ta claim rolls daily keys kakerareact kakerapower kakerainfo kakerastock rt dk rollsreset\n- Set your claim feedback to default: $rc none\n- Set your rolls left message to default: $rollsleft 0\nCan only roll with slash commands.\nDon't search for messages in Discord.\n- Don't scroll up the channel.";
-            const recommendations = "Recommended:\n- Use slash rolls.\n- Don't use non-slash rolls while the channel is in peak usage by other members.\n- Set your user order priorizing roll and kakera claiming.";
+            el_LoggedUsersButton.onclick = (_e) => AutoMudae.inject(false);
+            el_TokenListButton.onclick = (_e) => AutoMudae.renderTokenList();
 
-            const exposeLogger = this.preferences.get(E.PREFERENCES.EXTRA).logger;
+            const el_InjectionsWrapper = document.createElement("div");
+            el_InjectionsWrapper.id = "automudae-injections-wrapper";
 
-            if (exposeLogger) {
-                const doNothing = () => { };
+            el_InjectionsWrapper.appendChild(el_LoggedUsersButton);
+            el_InjectionsWrapper.appendChild(el_TokenListButton);
 
-                for (const method in logger) {
-                    if (!Object.hasOwn(logger, method)) continue;
+            DOM.el_InjectionsWrapper = el_InjectionsWrapper;
 
-                    window.console[method] = doNothing;
-                }
-
-                console.clear();
-                window.logger = logger;
-                logger.debug("Turned off native console. Use logger instead. I recommend disabling network log, since Discord usualy prompt a lot of these.");
-                logger.debug(requirements);
-                logger.debug(recommendations);
-                logger._reprompt();
-            }
-
-            this.render();
-            this.tryEnable();
-
-            if (!exposeLogger) {
-                logger.info(requirements);
-                logger.info(recommendations);
-            }
+            document.body.appendChild(el_InjectionsWrapper);
         },
 
-        setup() {
-            const windowPathname = window.location?.pathname;
+        preRender() {
+            const el_DiscordToolBar = document.querySelector("[class^='toolbar']");
+            el_DiscordToolBar.innerHTML = "";
 
-            if (!windowPathname) {
-                return "Couldn't retrieve current window URL.";
-            }
+            /// Run Button
+            const el_RunButton = document.createElement("div");
+            el_RunButton.id = "automudae-run-button";
+            el_RunButton.classList.add("automudae-hide");
 
-            const [_, pathDiscriminator, guildId, channelId] = windowPathname.split("/");
+            el_DiscordToolBar.appendChild(el_RunButton);
 
-            if (pathDiscriminator !== "channels") {
-                return "You must be viewing the desired channel.";
-            }
+            DOM.el_RunButton = el_RunButton;
 
-            if (!guildId || !channelId) {
-                return "Couldn't retrieve active guild or channel.";
-            }
+            /// State Text
+            const el_StateWrapper = document.createElement("div");
+            el_StateWrapper.id = "automudae-state";
+            el_StateWrapper.innerHTML = "<b>AutoMudae:</b>";
 
-            DOM.el_ChannelList = document.querySelector("#channels > ul");
-            DOM.el_MemberList = document.querySelector("div[class^='members'] > div");
-            DOM.el_Chat = document.querySelector("ol[class^='scrollerInner']");
-            DOM.el_ChatWrapper = document.querySelector("main[class^='chatContent']");
+            const el_StateSpan = document.createElement("span");
+            el_StateSpan.appendChild(document.createTextNode("Idle"));
 
-            if (!DOM.el_Chat || !DOM.el_MemberList || !DOM.el_ChannelList || !DOM.el_ChatWrapper) {
-                return "Make sure you're viewing the desired channel and the page is fully loaded.";
-            }
+            el_StateWrapper.appendChild(el_StateSpan);
+            el_DiscordToolBar.appendChild(el_StateWrapper);
 
-            if (!localStorage || !localStorage.MultiAccountStore || !localStorage.tokens) {
-                return "Couldn't retrieve information from Discord.";
-            }
+            DOM.el_StateSpan = el_StateSpan;
 
-            const storeUsers = JSON.parse(localStorage.MultiAccountStore)?._state.users;
-            const tokens = JSON.parse(localStorage.tokens);
+            /// Injection Buttons
+            this.toggleInjectionButtons();
+        },
 
-            if (!storeUsers || !tokens) {
-                return "Couldn't retrieve information about your accounts.";
-            }
+        inject(tokenList) {
+            this.toggleInjectionButtons();
 
-            const users = [];
+            logger.info("Injecting...");
 
-            for (let i = 0; i < storeUsers.length; i++) {
-                const { id, username, avatar } = storeUsers[i];
+            this.setState(E.AUTOMUDAE_STATE.SETUP);
 
-                const token = tokens[id];
-
-                if (!token) {
-                    return `Couldn't retrieve information about user [${username}]`;
+            AutoMudae.setup(tokenList)
+            .then(() => {
+                this.clearError();
+    
+                const requirements = "Required:\n- All your accounts should have custom avatars\n- Arrange your $TU to expose all needed information: $ta claim rolls daily keys kakerareact kakerapower kakerainfo kakerastock rt dk rollsreset\n- Set your claim feedback to default: $rc none\n- Set your rolls left message to default: $rollsleft 0\nCan only roll with slash commands.\nDon't search for messages in Discord.\n- Don't scroll up the channel.";
+                const recommendations = "Recommended:\n- Use slash rolls.\n- Don't use non-slash rolls while the channel is in peak usage by other members.\n- Set your user order priorizing roll and kakera claiming.";
+    
+                const exposeLogger = this.preferences.get(E.PREFERENCES.EXTRA).logger;
+    
+                if (exposeLogger) {
+                    const doNothing = () => { };
+    
+                    for (const method in logger) {
+                        if (!Object.hasOwn(logger, method)) continue;
+    
+                        window.console[method] = doNothing;
+                    }
+    
+                    console.clear();
+                    window.logger = logger;
+                    logger.debug("Turned off native console. Use logger instead. I recommend disabling network log, since Discord usualy prompt a lot of these.");
+                    logger.debug(requirements);
+                    logger.debug(recommendations);
+                    logger._reprompt();
                 }
+    
+                this.render();
+                this.tryEnable();
+    
+                if (!exposeLogger) {
+                    logger.info(requirements);
+                    logger.info(recommendations);
+                }
+            })
+            .catch(err => {
+                logger.error(err);
+                this.error(err);
+                this.setState(E.AUTOMUDAE_STATE.INJECT);
+                this.toggleInjectionButtons();
+            });
+        },
 
-                users.push(new MudaeUser(id, username, avatar, token));
-            }
+        async setup(tokenList){
+            return new Promise(async (resolve, reject) =>  {
+                const windowPathname = window.location?.pathname;
+    
+                if (!windowPathname) {
+                    reject("Couldn't retrieve current window URL.");
+                }
+    
+                const [_, pathDiscriminator, guildId, channelId] = windowPathname.split("/");
+    
+                if (pathDiscriminator !== "channels") {
+                    reject("You must be viewing the desired channel.");
+                }
+    
+                if (!guildId || !channelId) {
+                    reject("Couldn't retrieve active guild or channel.");
+                }
+    
+                DOM.el_ChannelList = document.querySelector("#channels > ul");
+                DOM.el_MemberList = document.querySelector("div[class^='members'] > div");
+                DOM.el_Chat = document.querySelector("ol[class^='scrollerInner']");
+                DOM.el_ChatWrapper = document.querySelector("main[class^='chatContent']");
+    
+                if (!DOM.el_Chat || !DOM.el_MemberList || !DOM.el_ChannelList || !DOM.el_ChatWrapper) {
+                    reject("Make sure you're viewing the desired channel and the page is fully loaded.");
+                }
+    
+                if (!localStorage || !localStorage.MultiAccountStore || !localStorage.tokens) {
+                    reject("Couldn't retrieve information from Discord.");
+                }
+    
+                const users = [];
+    
+                if (tokenList){    
+                    for (let i = 0; i < tokenList.length; i++) {
+                        users.push(await new MudaeUser(tokenList[i]));
+                    }
+                } else {
+                    const storeUsers = JSON.parse(localStorage.MultiAccountStore)?._state.users;
+                    const tokens = JSON.parse(localStorage.tokens);
+        
+                    if (!storeUsers || !tokens) {
+                        return "Couldn't retrieve information about your accounts.";
+                    }
+    
+                    for (let i = 0; i < storeUsers.length; i++) {
+                        const { id, username, avatar } = storeUsers[i];
+        
+                        const token = tokens[id];
+        
+                        if (!token) {
+                            return `Couldn't retrieve information about user [${username}]`;
+                        }
+        
+                        users.push(await new MudaeUser(token, id, username, avatar));
+                    }
+                }
+    
+                this.users = users;
+                Discord.info.set(E.DISCORD_INFO.CHANNEL_ID, channelId);
+                Discord.info.set(E.DISCORD_INFO.GUILD_ID, guildId);
+    
+                const defaultPreferences = `[
+                    ["${E.PREFERENCES.KAKERA}", {"kakeraP": false, "kakera": false, "kakeraT": false, "kakeraG": false, "kakeraY": false, "kakeraO": false, "kakeraR": false, "kakeraW": false, "kakeraL": false}],
+                    ["${E.PREFERENCES.MENTIONS}", ""],
+                    ["${E.PREFERENCES.ROLL}", {"enabled":true,"type":"wx"}],
+                    ["${E.PREFERENCES.SOUND}", {"foundcharacter":true,"marry":true,"cantmarry":true, "lastresetnorolls":true,"soulmate":true,"wishsteal":true}],
+                    ["${E.PREFERENCES.EXTRA}", {"logger":true}]
+                ]`;
+    
+                const savedVersion = GM_getValue(E.GMVALUE.VERSION, null);
+    
+                const isPreferencesOutdated = !savedVersion || savedVersion !== GM_info.script.version;
+    
+                const stringifiedPreferences = isPreferencesOutdated ? defaultPreferences : GM_getValue(E.GMVALUE.PREFERENCES, defaultPreferences);
+    
+                this.preferences = new Map(JSON.parse(stringifiedPreferences));
+    
+                GM_setValue(E.GMVALUE.VERSION, GM_info.script.version);
 
-            this.users = users;
-            Discord.info.set(E.DISCORD_INFO.CHANNEL_ID, channelId);
-            Discord.info.set(E.DISCORD_INFO.GUILD_ID, guildId);
-
-            const defaultPreferences = `[
-                ["${E.PREFERENCES.KAKERA}", {"kakeraP": false, "kakera": false, "kakeraT": false, "kakeraG": false, "kakeraY": false, "kakeraO": false, "kakeraR": false, "kakeraW": false, "kakeraL": false}],
-                ["${E.PREFERENCES.MENTIONS}", ""],
-                ["${E.PREFERENCES.ROLL}", {"enabled":true,"type":"wx"}],
-                ["${E.PREFERENCES.SOUND}", {"foundcharacter":true,"marry":true,"cantmarry":true, "lastresetnorolls":true,"soulmate":true,"wishsteal":true}],
-                ["${E.PREFERENCES.EXTRA}", {"logger":true}]
-            ]`;
-
-            const savedVersion = GM_getValue(E.GMVALUE.VERSION, null);
-
-            const isPreferencesOutdated = !savedVersion || savedVersion !== GM_info.script.version;
-
-            const stringifiedPreferences = isPreferencesOutdated ? defaultPreferences : GM_getValue(E.GMVALUE.PREFERENCES, defaultPreferences);
-
-            this.preferences = new Map(JSON.parse(stringifiedPreferences));
-
-            GM_setValue(E.GMVALUE.VERSION, GM_info.script.version);
+                resolve();
+            });
         },
 
         render() {
@@ -680,8 +818,6 @@
                 AutoMudae.preferences.set(E.PREFERENCES.ROLL, rollPreferences);
                 AutoMudae.savePreferences();
             };
-
-            this.setState(E.AUTOMUDAE_STATE.SETUP);
         },
 
         tryEnable() {
@@ -689,11 +825,14 @@
             if (!Object.values(E.DISCORD_INFO).every(info => Discord.info.has(info))) return;
 
             this.setState(E.AUTOMUDAE_STATE.IDLE);
-            DOM.el_MainButton.onclick = (_e) => AutoMudae.toggle();
+            DOM.el_RunButton.onclick = (_e) => AutoMudae.toggle();
+            DOM.el_RunButton.classList.remove("automudae-hide");
             logger.plus("Ready to go!");
         },
 
         toggle() {
+            if (this.state !== E.AUTOMUDAE_STATE.IDLE && this.state !== E.AUTOMUDAE_STATE.RUN) return;
+
             if (this.state === E.AUTOMUDAE_STATE.IDLE) {
                 this.clearError();
 
@@ -725,21 +864,21 @@
         },
 
         setState(E_STATE) {
-            if (DOM.el_MainButton.classList.contains(this.state)) {
-                DOM.el_MainButton.classList.replace(this.state, E_STATE);
-            } else {
-                DOM.el_MainButton.classList.add(E_STATE);
-            }
-
             this.state = E_STATE;
 
             const stateTexts = {};
+            stateTexts[E.AUTOMUDAE_STATE.INJECT] = "Idle";
             stateTexts[E.AUTOMUDAE_STATE.SETUP] = "Setting up...";
             stateTexts[E.AUTOMUDAE_STATE.ERROR] = "Error!";
-            stateTexts[E.AUTOMUDAE_STATE.IDLE] = "Run Auto-Mudae";
+            stateTexts[E.AUTOMUDAE_STATE.IDLE] = "Idle";
             stateTexts[E.AUTOMUDAE_STATE.RUN] = "Running...";
 
-            DOM.el_MainText.innerText = stateTexts[E_STATE];
+            DOM.el_StateSpan.innerText = stateTexts[E_STATE];
+
+            if ((E_STATE === E.AUTOMUDAE_STATE.RUN || E_STATE === E.AUTOMUDAE_STATE.IDLE) && DOM.el_RunButton){
+                const isRun = E_STATE === E.AUTOMUDAE_STATE.RUN;
+                DOM.el_RunButton.classList[isRun ? "add" : "remove"]("running");
+            }
         },
 
         think() {
@@ -903,7 +1042,7 @@
 
                 const userWithEnoughPower = kakeraCode === E.KAKERA.PURPLE
                     ? AutoMudae.users[0]
-                    : AutoMudae.users.find(user => user.info.get(E.MUDAE_INFO.POWER) > user.info.get(E.MUDAE_INFO.CONSUMPTION));
+                    : AutoMudae.users.find(user => user.info.get(E.MUDAE_INFO.POWER) >= user.info.get(E.MUDAE_INFO.CONSUMPTION));
 
                 if (userWithEnoughPower) userWithEnoughPower.react(el_Message, E.EMOJI[kakeraCode]);
             }
@@ -975,6 +1114,9 @@
 
                                 const canRT = user.info.get(E.MUDAE_INFO.CAN_RT);
                                 AutoMudae.updateInfoPanel(E.INFO_FIELD.CAN_RT, canRT ? "Yes" : "No", user);
+                            } else {
+                                user.info.set(E.MUDAE_INFO.CAN_RT, false);
+                                AutoMudae.updateInfoPanel(E.INFO_FIELD.CAN_RT, "No", user);
                             }
 
                             if (/casar/.test(mudaeResponse)) {
@@ -1253,8 +1395,12 @@
     window.addEventListener("load", main, false);
 
     function main() {
-        AutoMudae.renderMainButton();
+        const findToolbarTimer = setInterval(() => {
+            if (document.querySelector("[class^='toolbar']")){
+                clearInterval(findToolbarTimer);
+                AutoMudae.preRender();
+            }
+        }, 200);
     };
 })();
-
 
