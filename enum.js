@@ -42,8 +42,10 @@
         '❤️': '%E2%9D%A4%EF%B8%8F',
         '❣️': '%E2%9D%A3%EF%B8%8F',
         '💞': '%F0%9F%92%9E',
-        '♥️': '%E2%99%A5%EF%B8%8F',
-        PEOPLE_HUGGING: '%F0%9F%AB%82',
+        '♥️': '%E2%99%A5%EF%B8%8F'
+    };
+
+    E.EMOJI_KAKERA = {
         kakeraP: 'kakeraP%3A609264156347990016',
         kakera: 'kakera%3A469791929106956298',
         kakeraT: 'kakeraT%3A609264180851376132',
@@ -90,6 +92,15 @@
         POWER_CONSUMPTION: 'consumption',
         CAN_MARRY: 'marry',
         CAN_RT: 'rt'
+    };
+
+    E.SLASH_COMMANDS = {
+        "wx": { version: "832172261968314389", id: "832172261968314388" },
+        "wa": { version: "832172151729422418", id: "832172151729422417" },
+        "wg": { version: "832172216665374751", id: "832172216665374750" },
+        "hx": { version: "832172373536669707", id: "832172373536669706" },
+        "ha": { version: "832172457028747337", id: "832172457028747336" },
+        "hg": { version: "832172416192872459", id: "832172416192872458" },
     };
 
     unsafeWindow.AUTOMUDAE ??= {};

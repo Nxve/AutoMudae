@@ -1,11 +1,11 @@
 // ==UserScript==
-// @name         AutoMudae_Multi
+// @name         AutoMudae
 // @namespace    nxve
-// @version      0.8.0
+// @version      0.8.1
 // @description  Automates the use of Mudae bot in Discord
 // @author       Nxve
-// @updateURL    https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/index.js
-// @downloadURL  https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/index.js
+// @updateURL    https://raw.githubusercontent.com/Nxve/AutoMudae/main/index.js
+// @downloadURL  https://raw.githubusercontent.com/Nxve/AutoMudae/main/index.js
 // @supportURL   https://github.com/Nxve/AutoMudae/issues
 // @match        https://discord.com/channels/*
 // @exclude      https://discord.com/channels/@me
@@ -15,14 +15,14 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_info
-// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/logger.js
-// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/enum.js
-// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/css.js
-// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/multiaccount/sound.js
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/logger.js
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/enum.js
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/css.js
+// @require      https://raw.githubusercontent.com/Nxve/AutoMudae/main/sound.js
 // ==/UserScript==
 
 (function () {
-    /// Require
+    /// Require External
     const window = unsafeWindow;
     const logger = window.logger;
     const E = window.AUTOMUDAE?.E;
@@ -38,8 +38,8 @@
     GM_addStyle(CSS);
 
     /// Utils
-    const pickRandomFromArray = (arr) => arr[arr.length * Math.random() | 0];
-    const getLastFromArray = (arr) => arr[arr.length - 1];
+    const pickRandom = (arr) => arr[arr.length * Math.random() | 0];
+    const getLast = (arr) => arr[arr.length - 1];
 
     /// DOM Elements
     const DOM = {
@@ -55,19 +55,10 @@
     };
 
     /// CONSTS
-    const LOOKUP_MESSAGE_COUNT = 100;
     const INTERVAL_SEND_MESSAGE = 1500;
     const INTERVAL_ROLL = 2000;
     const INTERVAL_THINK = 200;
     const MUDAE_USER_ID = '432610292342587392';
-    const SLASH_COMMANDS = {
-        "wx": { version: "832172261968314389", id: "832172261968314388" },
-        "wa": { version: "832172151729422418", id: "832172151729422417" },
-        "wg": { version: "832172216665374751", id: "832172216665374750" },
-        "hx": { version: "832172373536669707", id: "832172373536669706" },
-        "ha": { version: "832172457028747337", id: "832172457028747336" },
-        "hg": { version: "832172416192872459", id: "832172416192872458" },
-    };
 
     /// Discord Data & Utils
     const Discord = {
@@ -75,8 +66,6 @@
         lastMessageTime: 0,
         cdSendMessage: 0,
         nonce: Math.floor(Math.random() * 1000000),
-
-        getLastMessages: (count = LOOKUP_MESSAGE_COUNT) => [...document.querySelectorAll("li[id^='chat-messages']")].slice(-(count > LOOKUP_MESSAGE_COUNT ? LOOKUP_MESSAGE_COUNT : (count < 1 ? 1 : count))),
 
         Message: {
             getDate: (el_Message) => {
@@ -112,7 +101,7 @@
                 if (match) return match[1];
             },
 
-            getId: (el_Message) => getLastFromArray(el_Message.id.split("-")),
+            getId: (el_Message) => getLast(el_Message.id.split("-")),
 
             isFromMudae: function (el_Message) {
                 return this.getAuthorId(el_Message) === MUDAE_USER_ID
@@ -225,7 +214,7 @@
         roll() {
             const rollPreferences = AutoMudae.preferences.get(E.PREFERENCES.ROLL);
 
-            const command = SLASH_COMMANDS[rollPreferences.type];
+            const command = E.SLASH_COMMANDS[rollPreferences.type];
 
             fetch("https://discord.com/api/v9/interactions", {
                 "method": "POST",
@@ -278,7 +267,7 @@
                             return;
                         }
 
-                        if (!el_SubjectMessage) return this.classList.add("missing");;
+                        if (!el_SubjectMessage) return this.classList.add("missing");
 
                         const loadedMessages = [...el_SubjectMessage.parentElement.children];
                         const messageIndex = loadedMessages.indexOf(el_SubjectMessage);
@@ -968,7 +957,7 @@
             }
 
             if (E_INFO_FIELD === E.INFO_FIELD.POWER) {
-                const highestPower = getLastFromArray([...document.querySelectorAll(`[id^='automudae-field-${E_INFO_FIELD}-']`)].map(el_UserField => el_UserField.innerText).filter(text => /\d+/.test(text)).sort((a, b) => Number(a) - Number(b)));
+                const highestPower = getLast([...document.querySelectorAll(`[id^='automudae-field-${E_INFO_FIELD}-']`)].map(el_UserField => el_UserField.innerText).filter(text => /\d+/.test(text)).sort((a, b) => Number(a) - Number(b)));
 
                 if (highestPower) el_OverallField.innerText = `↓ ${highestPower}`;
 
@@ -1044,7 +1033,7 @@
                     ? AutoMudae.users[0]
                     : AutoMudae.users.find(user => user.info.get(E.MUDAE_INFO.POWER) >= user.info.get(E.MUDAE_INFO.CONSUMPTION));
 
-                if (userWithEnoughPower) userWithEnoughPower.react(el_Message, E.EMOJI[kakeraCode]);
+                if (userWithEnoughPower) userWithEnoughPower.react(el_Message, E.EMOJI_KAKERA[kakeraCode]);
             }
 
         }, 100);
@@ -1243,7 +1232,7 @@
                 if (noMoreRollsMatch) {
                     const user = AutoMudae.users.find(user => user.username === noMoreRollsMatch[1]);
 
-                    return user && setTimeout(() => user.send("$tu"), 250);;
+                    return user && setTimeout(() => user.send("$tu"), 250);
                 }
 
                 const el_KakeraClaimStrong = el_Message.querySelector("div[id^='message-content'] span[class^='emojiContainer'] + strong");
@@ -1350,7 +1339,7 @@
                             if (isWished) {
                                 observeToReact(el_Message, marriageableUser);
                             } else {
-                                setTimeout(() => marriageableUser.react(el_Message, E.EMOJI.PEOPLE_HUGGING), 8500);
+                                setTimeout(() => marriageableUser.react(el_Message, pickRandom(Object.values(E.EMOJI))), 8500);
                             }
 
                             return;
