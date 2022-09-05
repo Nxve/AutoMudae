@@ -45,3 +45,4 @@ You have now a **Run** button at upper right.
 - [ ] Add to total claimed kakera those received from EMERALD IV reward
 - [ ] Add a way to list interesting characters/series to claim
 - [ ] Add other language support
+- [ ] Add this project to GreasyFork
