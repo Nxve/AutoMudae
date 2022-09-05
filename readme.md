@@ -2,7 +2,6 @@
 Userscript for Tampermonkey that automates the use of Mudae bot in Discord.
 
 ### ⚠ Disclaimer
----
 As it is in early development and it's initial purpose is personal use, it has some limitations for now: Chrome Browser, ptBR Mudae, slash commands only and such.
 
 Feel free to report any issue or ask for features.
