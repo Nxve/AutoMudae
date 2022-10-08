@@ -1,9 +1,10 @@
 // ==UserScript==
 // @name         AutoMudae
-// @namespace    https://github.com/Nxve/AutoMudae
-// @version      0.8.4
 // @description  Automates the use of Mudae bot in Discord
+// @version      0.8.4
 // @author       Nxve
+// @license      GNU GPLv3
+// @namespace    https://github.com/Nxve/AutoMudae
 // @supportURL   https://github.com/Nxve/AutoMudae/issues
 // @match        https://discord.com/channels/*
 // @exclude      https://discord.com/channels/@me
