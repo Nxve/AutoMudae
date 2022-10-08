@@ -26,10 +26,10 @@ Feel free to report any issue or ask for features.
 
 ## 🛠 Installation
 1. Install [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo).
-2. Click at your Tampermonkey extension icon, go to *Dashboard* -> *Utilities*, then at "_Import from URL_" you paste the url for raw version of index.js. (https://raw.githubusercontent.com/Nxve/AutoMudae/main/index.js)
+2. Go to [GreasyFork Script Page](https://greasyfork.org/en/scripts/452710-automudae) and install it from there.
 
 ## Usage
-Open DiscordWeb, navigate to desired channel and refresh the page so Tampermonkey can inject the userscript at the tab.
+Open Discord web, navigate to desired channel and refresh the page so Tampermonkey can inject the userscript at the tab.
 
 Now you have two options at upper center of your Discord page:
 - **Use Logged Users**: which uses all your Discord logged users (Up to 4)
@@ -38,11 +38,10 @@ Now you have two options at upper center of your Discord page:
 You have now a **Run** button at upper right.
 
 ## TODO & Known Issues
-- [ ] Improve it's performance while running on background (Chrome issue with "inactive" tabs)
-- [ ] Force it to wait for 3 seconds before trying to claim a wishprotected character
-- [ ] Add config to delay claim (In case of $togglesnipe)
-- [ ] Adapt to $togglebutton
-- [ ] Add to total claimed kakera those received from EMERALD IV reward
-- [ ] Add a way to list interesting characters/series to claim
-- [ ] Add other language support
-- [ ] Add this project to GreasyFork
+- Improve it's performance while running on background (Chrome issue with "inactive" tabs)
+- Force it to wait for 3 seconds before trying to claim a wishprotected character
+- Add config to delay claim (In case of $togglesnipe)
+- Adapt to $togglebutton
+- Add to total claimed kakera those received from EMERALD IV reward
+- Add a way to list interesting characters/series to claim
+- Add other language support
