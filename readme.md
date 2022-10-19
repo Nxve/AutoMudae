@@ -38,10 +38,9 @@ Now you have two options at upper center of your Discord page:
 You have now a **Run** button at upper right.
 
 ## TODO & Known Issues
-- Improve it's performance while running on background (Chrome issue with "inactive" tabs)
-- Force it to wait for 3 seconds before trying to claim a wishprotected character
+- Add other language support
 - Add config to delay claim (In case of $togglesnipe)
 - Adapt to $togglebutton
 - Add to total claimed kakera those received from EMERALD IV reward
 - Add a way to list interesting characters/series to claim
-- Add other language support
+- Improve it's performance while running on background (Chrome issue with "inactive" tabs)

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AutoMudae
 // @description  Automates the use of Mudae bot in Discord
-// @version      0.8.4
+// @version      0.8.5
 // @author       Nxve
 // @license      GNU GPLv3
 // @namespace    https://github.com/Nxve/AutoMudae
@@ -860,11 +860,7 @@
                     return resolve(this);
                 }
 
-                fetch("https://discord.com/api/v9/users/@me", {
-                    "headers": {
-                        "authorization": token
-                    }
-                })
+                fetch("https://discord.com/api/v9/users/@me", { "headers": { "authorization": token } })
                 .then(response => response.json())
                 .then(async (data) => {
                     this.id = data.id;
@@ -918,7 +914,7 @@
             Discord.cdSendMessage = now;
         }
 
-        react(el_Message, E_EMOJI) {
+        react(el_Message, E_EMOJI = E.EMOJI["💓"]) {
             fetch(`https://discord.com/api/v9/channels/${Discord.info.get(E.DISCORD_INFO.CHANNEL_ID)}/messages/${Discord.Message.getId(el_Message)}/reactions/${E_EMOJI}/%40me`, {
                 "method": "PUT",
                 "headers": {
@@ -1092,17 +1088,21 @@
 
             const el_TokenList = document.querySelector("#automudae-tokenlist ul");
 
+            const addInputField = (defaultValue) => {
+                if (el_TokenList.childElementCount < 20){
+                    const el_TokenInput = document.createElement("input");
+
+                    el_TokenInput.onblur = handleTokenInput;
+
+                    if (defaultValue) el_TokenInput.value = defaultValue;
+
+                    el_TokenList.appendChild(document.createElement("li").appendChild(el_TokenInput).parentElement);
+                }
+            };
+
             document.getElementById("automudae-tokenlist-clear").onclick = () => el_TokenList.innerHTML = "";
 
-            document.getElementById("automudae-tokenlist-add").onclick = () => {
-                if (el_TokenList.childElementCount >= 20) return;
-
-                const el_TokenInput = document.createElement("input");
-
-                el_TokenInput.onblur = handleTokenInput;
-
-                el_TokenList.appendChild(document.createElement("li").appendChild(el_TokenInput).parentElement);
-            };
+            document.getElementById("automudae-tokenlist-add").onclick = () => addInputField();
 
             document.getElementById("automudae-tokenlist-accept").onclick = () => {
                 const tokenSet = new Set();
@@ -1125,12 +1125,7 @@
                 AutoMudae.inject(tokenList);
             };
 
-            GM_getValue(E.GMVALUE.TOKENLIST)?.split(";").forEach(token => {
-                const el_TokenInput = document.createElement("input");
-                el_TokenInput.value = token;
-                //# Add data-username to each li
-                el_TokenList.appendChild(document.createElement("li").appendChild(el_TokenInput).parentElement);
-            });
+            GM_getValue(E.GMVALUE.TOKENLIST)?.split(";").forEach(token => addInputField(token));
         },
 
         toggleInjectionButtons(){
@@ -1716,22 +1711,19 @@
     window.Discord = Discord;
     window.AutoMudae = AutoMudae;
 
-    function observeToReact(el_Message, kakeraReactionOrUserToReact) {
-        const isKakera = typeof kakeraReactionOrUserToReact === "boolean";
-        const user = isKakera ? null : kakeraReactionOrUserToReact;
-
+    function observeToReact(el_Message, userToReact) {
         let runs = 0;
 
         const observer = setInterval(() => {
             if (!el_Message || runs++ >= 30) return clearInterval(observer);
 
-            const el_ReactionImg = el_Message.querySelector(`div[class^='reactionInner']${isKakera ? "[aria-label^='kakera']" : ""}[aria-label*='1 rea'] img`);
+            const el_ReactionImg = el_Message.querySelector(`div[class^='reactionInner']${userToReact ? "" : "[aria-label^='kakera']"}[aria-label*='1 rea'] img`);
 
             if (!el_ReactionImg) return;
 
             clearInterval(observer);
 
-            if (!isKakera) {
+            if (userToReact) {
                 const emoji = E.EMOJI[el_ReactionImg.alt];
 
                 if (!emoji) {
@@ -1741,22 +1733,19 @@
                     return;
                 }
 
-                user.react(el_Message, emoji);
+                userToReact.react(el_Message, emoji);
                 return;
             }
 
-            if (isKakera) {
-                const kakeraCode = el_ReactionImg.alt;
+            const kakeraCode = el_ReactionImg.alt;
 
-                if (!AutoMudae.preferences.get(E.PREFERENCES.KAKERA)[kakeraCode]) return;
+            if (!AutoMudae.preferences.get(E.PREFERENCES.KAKERA)[kakeraCode]) return;
 
-                const userWithEnoughPower = kakeraCode === E.KAKERA.PURPLE
-                    ? AutoMudae.users[0]
-                    : AutoMudae.users.find(user => user.info.get(E.MUDAE_INFO.POWER) >= user.info.get(E.MUDAE_INFO.CONSUMPTION));
+            const userWithEnoughPower = kakeraCode === E.KAKERA.PURPLE
+                ? AutoMudae.users[0]
+                : AutoMudae.users.find(user => user.info.get(E.MUDAE_INFO.POWER) >= user.info.get(E.MUDAE_INFO.CONSUMPTION));
 
-                if (userWithEnoughPower) userWithEnoughPower.react(el_Message, E.EMOJI_KAKERA[kakeraCode]);
-            }
-
+            if (userWithEnoughPower) userWithEnoughPower.react(el_Message, E.EMOJI_KAKERA[kakeraCode]);
         }, 100);
     };
 
@@ -2002,13 +1991,14 @@
 
                 const characterName = el_Message.querySelector("span[class^='embedAuthorName']").innerText;
                 const el_ReplyAvatar = el_Message.querySelector("img[class^='executedCommandAvatar']");
+                let replyUserId;
 
                 if (el_ReplyAvatar) {
-                    const matchReplyUserId = /avatars\/(\d+)\//.exec(el_ReplyAvatar.src);
+                    replyUserId = /avatars\/(\d+)\//.exec(el_ReplyAvatar.src);
 
-                    if (!matchReplyUserId) return logger.error("Couldn't get reply user ID for", el_Message);
+                    if (!replyUserId) return logger.error("Couldn't get reply user ID for", el_Message);
 
-                    const user = AutoMudae.users.find(user => user.id === matchReplyUserId[1]);
+                    const user = AutoMudae.users.find(user => user.id === replyUserId[1]);
 
                     if (user) {
                         const rollsLeft = user.info.get(E.MUDAE_INFO.ROLLS_LEFT) - 1;
@@ -2052,17 +2042,25 @@
                     if (el_InterestingCharacter) {
                         const logMessage = `Found character [${characterName}]`;
                         logger.info(logMessage);
-                        AutoMudae.toasts.add(E.TOAST.INFO, logMessage, el_Message)
+                        AutoMudae.toasts.add(E.TOAST.INFO, logMessage, el_Message);
+
+                        if (AutoMudae.preferences.get(E.PREFERENCES.SOUND).foundcharacter) SOUND.foundCharacter();
 
                         if (marriageableUser) {
-                            if (AutoMudae.preferences.get(E.PREFERENCES.SOUND).foundcharacter) SOUND.foundCharacter();
-
-                            if (isWished) {
-                                observeToReact(el_Message, marriageableUser);
-                            } else {
+                            //# Make it verify if marriageableUser can still marry after all delay calculations (In case of multiple marriageable characters at the same time)
+                            if (!isWished) {
                                 setTimeout(() => marriageableUser.react(el_Message, pickRandom(Object.values(E.EMOJI))), 8500);
+                                return;
                             }
 
+                            const isProtected = !!el_Message.querySelector("img[alt=':wishprotect:']");
+
+                            if (!isProtected || isProtected && marriageableUser.id === replyUserId){
+                                observeToReact(el_Message, marriageableUser);
+                                return;
+                            }
+
+                            setTimeout(() => observeToReact(el_Message, marriageableUser), 2905);
                             return;
                         }
 
@@ -2079,7 +2077,7 @@
                 /// Owned characters
                 if (el_Footer.innerText.includes("Pertence")) {
                     /// Observe kakera reactions append
-                    observeToReact(el_Message, true);
+                    observeToReact(el_Message);
                 }
 
                 return;
