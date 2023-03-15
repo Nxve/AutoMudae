@@ -1,3 +1,5 @@
+# ⚠ Discontinued: refer to [AutoMudae Extension](https://github.com/Nxve/AutoMudaeExt).
+
 # AutoMudae 👾
 Userscript for Tampermonkey that automates the use of Mudae bot in Discord.
 
